@@ -8,19 +8,11 @@
 </head>
 <body>
   <main class="app-shell">
-    <section class="header-row">
+    <section class="header-row no-controls-header">
       <div>
-        <div class="eyebrow">Static JavaScript Version</div>
+        <div class="eyebrow">CSV Scoreboard Version</div>
         <h1>Pier Sixty-Six Department Race</h1>
-        <p class="subtitle">Type any exact score from 0 to 110. Board pieces snap to the last completed 5-point tile. Spire pieces snap to the last completed 2-point rung.</p>
-      </div>
-
-      <div class="control-card" aria-label="Department score controls">
-        <select id="departmentSelect" class="control-select"></select>
-        <input id="scoreInput" class="control-input" type="number" min="0" max="110" step="1" value="0" placeholder="Points" />
-        <span class="pts-label">pts</span>
-        <button id="moveButton" class="primary-button">Move Piece</button>
-        <button id="resetButton" class="reset-button">Reset All to 0</button>
+        <p class="subtitle">Scores are loaded globally from scores.csv. Board pieces snap to the last completed 5-point tile. Spire pieces snap to the last completed 2-point rung.</p>
       </div>
     </section>
 
@@ -30,7 +22,7 @@
       <div class="rankings-header">
         <div>
           <h2>Department Rankings</h2>
-          <p>Live leaderboard sorted by actual points.</p>
+          <p>Live leaderboard sorted by the latest uploaded scores.csv file.</p>
         </div>
         <div id="departmentCount" class="department-count"></div>
       </div>
