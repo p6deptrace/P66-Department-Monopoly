@@ -65,12 +65,10 @@ const departmentBank = [
 ];
 
 let departments = departmentBank.map((department) => ({ ...department, score: 0 }));
-let selectedDepartmentId = departments[0].id;
 
 async function loadScoresFromCSV() {
   try {
     const response = await fetch(`${scoresPath}?v=${Date.now()}`, { cache: "no-store" });
-
     if (!response.ok) {
       console.warn(`scores.csv could not be loaded. Status: ${response.status}`);
       return;
@@ -96,10 +94,8 @@ function parseScoresCSV(csvText) {
     const columns = line.split(",").map((cell) => cell.trim());
     const id = columns[0];
     const score = columns[1];
-
     if (!id || id.toLowerCase() === "id") continue;
     if (score === undefined || score === "" || Number.isNaN(Number(score))) continue;
-
     scoreMap.set(id, Number(score));
   }
 
@@ -124,10 +120,6 @@ function getDisplayedSpireLevel(score) {
   if (score < 100) return score;
   if (score >= 110) return 110;
   return Math.floor((score - 100) / 2) * 2 + 100;
-}
-
-function getDisplayedLevel(score) {
-  return score >= 100 ? getDisplayedSpireLevel(score) : getDisplayedBoardLevel(score);
 }
 
 function clampScore(value) {
@@ -163,10 +155,9 @@ function tileHtml(space, teams) {
   const isStart = space.name === "START";
   const cornerClass = space.type === "corner" ? "corner" : "";
 
-  const image =
-    !isStart && space.imageUrl
-      ? `<img class="tile-img" src="${space.imageUrl}" alt="${escapeHtml(space.name)}" loading="eager" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" /><div class="image-error" style="display:none;position:absolute;inset:38px 8px 48px 8px;align-items:center;justify-content:center;text-align:center;padding:8px;border-radius:12px;background:rgba(0,0,0,0.45);color:white;font-size:10px;font-weight:900;line-height:1.25;z-index:4;">IMAGE NOT FOUND<br>${escapeHtml(space.imageUrl)}</div>`
-      : "";
+  const image = !isStart && space.imageUrl
+    ? `<img class="tile-img" src="${space.imageUrl}" alt="${escapeHtml(space.name)}" loading="eager" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" /><div class="image-error" style="display:none;position:absolute;inset:38px 8px 48px 8px;align-items:center;justify-content:center;text-align:center;padding:8px;border-radius:12px;background:rgba(0,0,0,0.45);color:white;font-size:10px;font-weight:900;line-height:1.25;z-index:4;">IMAGE NOT FOUND<br>${escapeHtml(space.imageUrl)}</div>`
+    : "";
 
   const startVisual = isStart
     ? `<div class="start-visual"><div class="start-badge"><div class="start-arrow">▶</div><div class="start-word">Begin</div></div></div>`
@@ -192,7 +183,6 @@ function levelBottom(score) {
 
 function spireHtml() {
   const climbers = departments.filter((team) => team.score >= 100);
-
   const champion = climbers.length
     ? [...climbers].sort((a, b) => b.score - a.score || a.name.localeCompare(b.name))[0]
     : null;
@@ -212,15 +202,7 @@ function spireHtml() {
   }).join("");
 
   const championHtml = champion
-    ? `
-      <div class="spire-champion">
-        ${markerHtml(champion)}
-        <div>
-          <div class="champion-name">${escapeHtml(champion.name)}</div>
-          <div class="champion-score">${champion.score} pts shown at ${getDisplayedSpireLevel(champion.score)}</div>
-        </div>
-      </div>
-    `
+    ? `<div class="spire-champion">${markerHtml(champion)}<div><div class="champion-name">${escapeHtml(champion.name)}</div><div class="champion-score">${champion.score} pts shown at ${getDisplayedSpireLevel(champion.score)}</div></div></div>`
     : `<div class="champion-score" style="margin-top:8px">No department has reached 100 yet.</div>`;
 
   const legendRows = spireLevels.map((level) => {
@@ -243,7 +225,7 @@ function spireHtml() {
         <div class="spire-info">
           <div class="spire-eyebrow">The Race to</div>
           <h2 class="spire-title">The Spire</h2>
-          <p class="spire-copy">Scores are loaded from scores.csv. Board and Spire tokens snap to the last completed threshold.</p>
+          <p class="spire-copy">Scores are loaded globally from scores.csv. Board and Spire tokens snap to the last completed threshold.</p>
           <div class="spire-top-box">
             <div class="spire-box-label">Current Top Climber</div>
             ${championHtml}
@@ -272,10 +254,7 @@ function renderBoard() {
 
   boardSpaces.forEach((space) => {
     const gp = getGridPosition(space.id);
-    const departmentsHere = departments.filter(
-      (department) => getDisplayedBoardLevel(department.score) === space.points
-    );
-
+    const departmentsHere = departments.filter((department) => getDisplayedBoardLevel(department.score) === space.points);
     const cell = document.createElement("div");
     cell.style.gridColumn = gp.col;
     cell.style.gridRow = gp.row;
@@ -295,13 +274,10 @@ function renderRankings() {
   const departmentCount = document.getElementById("departmentCount");
   departmentCount.textContent = `${departments.length} departments`;
 
-  const rankedDepartments = [...departments].sort(
-    (a, b) => b.score - a.score || a.name.localeCompare(b.name)
-  );
+  const rankedDepartments = [...departments].sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
 
   rankings.innerHTML = rankedDepartments.map((department, index) => {
     const rank = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`;
-
     return `
       <div class="ranking-row ${index < 3 ? "top" : ""}">
         <div class="ranking-left">
@@ -309,7 +285,6 @@ function renderRankings() {
           ${markerHtml(department)}
           <div class="ranking-name-wrap">
             <span class="ranking-name">${escapeHtml(department.name)}</span>
-            
           </div>
         </div>
         <span class="ranking-score">${department.score} pts</span>
@@ -318,22 +293,12 @@ function renderRankings() {
   }).join("");
 }
 
-function syncControls() {
-  // Manual controls removed. Scores are controlled by scores.csv.
-}
-
 function renderAll() {
-  syncControls();
   renderBoard();
   renderRankings();
 }
 
-function initControls() {
-  // Manual controls removed. Scores are controlled by scores.csv.
-}
-
 async function init() {
-  initControls();
   await loadScoresFromCSV();
   renderAll();
 }
