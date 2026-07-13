@@ -194,7 +194,6 @@ function tileHtml(space, teams) {
     </div>
   `;
 }
-
 function levelBottom(score) {
   const pct = Math.min(1, Math.max(0, (score - 100) / 10));
 
