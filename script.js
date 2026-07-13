@@ -1,6 +1,6 @@
 "use strict";
 
-const imagePath = (fileName) => `images/${encodeURIComponent(fileName)}`;
+const imagePath = (fileName) => `images/${fileName}`;
 
 const boardSpaceData = [
   { name: "START", points: 0, type: "corner" },
@@ -143,7 +143,7 @@ function tileHtml(space, teams) {
   const isStart = space.name === "START";
   const cornerClass = space.type === "corner" ? "corner" : "";
   const image = !isStart && space.imageUrl
-    ? `<img class="tile-img" src="${space.imageUrl}" alt="${escapeHtml(space.name)}" loading="eager" onerror="this.style.display='none'" />`
+    ? `<img class="tile-img" src="${space.imageUrl}" alt="${escapeHtml(space.name)}" loading="eager" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" /><div class="image-error" style="display:none;position:absolute;inset:38px 8px 48px 8px;align-items:center;justify-content:center;text-align:center;padding:8px;border-radius:12px;background:rgba(0,0,0,0.45);color:white;font-size:10px;font-weight:900;line-height:1.25;z-index:4;">IMAGE NOT FOUND<br>${escapeHtml(space.imageUrl)}</div>`
     : "";
   const startVisual = isStart
     ? `<div class="start-visual"><div class="start-badge"><div class="start-arrow">▶</div><div class="start-word">Begin</div></div></div>`
