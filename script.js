@@ -300,7 +300,6 @@ function renderRankings() {
   );
 
   rankings.innerHTML = rankedDepartments.map((department, index) => {
-    const displayLevel = getDisplayedLevel(department.score);
     const rank = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`;
 
     return `
@@ -310,7 +309,7 @@ function renderRankings() {
           ${markerHtml(department)}
           <div class="ranking-name-wrap">
             <span class="ranking-name">${escapeHtml(department.name)}</span>
-            ${department.score !== displayLevel ? `<span class="ranking-shown">shown at ${displayLevel}</span>` : ""}
+            
           </div>
         </div>
         <span class="ranking-score">${department.score} pts</span>
@@ -320,7 +319,7 @@ function renderRankings() {
 }
 
 function syncControls() {
-  // Score controls have been removed. Scores are controlled by scores.csv.
+  // Manual controls removed. Scores are controlled by scores.csv.
 }
 
 function renderAll() {
@@ -330,7 +329,7 @@ function renderAll() {
 }
 
 function initControls() {
-  // Score controls have been removed. Scores are controlled by scores.csv.
+  // Manual controls removed. Scores are controlled by scores.csv.
 }
 
 async function init() {
