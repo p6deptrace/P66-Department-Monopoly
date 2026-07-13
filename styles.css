@@ -48,3 +48,56 @@
     min-height: 960px;
   }
 }
+/* Paste this at the bottom of styles.css */
+.control-card {
+  display: none !important;
+}
+
+.header-row {
+  align-items: flex-start;
+}
+
+.board-grid {
+  min-height: 1080px;
+}
+
+.tile,
+.spire-card {
+  min-height: 170px;
+}
+
+.tile-teams {
+  top: 42px;
+  left: 7px;
+  right: 7px;
+  justify-content: center;
+  align-content: flex-start;
+  max-height: calc(100% - 92px);
+  overflow: hidden;
+}
+
+.marker {
+  width: 26px;
+  height: 26px;
+  font-size: 8px;
+}
+
+.marker.large {
+  width: 36px;
+  height: 36px;
+  font-size: 10px;
+}
+
+@media (max-width: 1050px) {
+  .board-grid {
+    min-height: 900px;
+  }
+}
+
+@media (max-width: 760px) {
+  .board-grid {
+    grid-template-columns: repeat(6, 160px);
+    grid-template-rows: repeat(6, 150px);
+    min-height: 960px;
+  }
+}
