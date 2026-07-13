@@ -1,6 +1,7 @@
 "use strict";
 
 const imagePath = (fileName) => `Images/${fileName}`;
+const scoresPath = "scores.csv";
 
 const boardSpaceData = [
   { name: "START", points: 0, type: "corner" },
@@ -63,36 +64,46 @@ const departmentBank = [
   { id: "calusso-boh", name: "Calusso BOH", color: "bg-orange-900" },
 ];
 
-const storageKey = "pier66-department-race-scores-v1";
-let departments = loadDepartments();
+let departments = departmentBank.map((department) => ({ ...department, score: 0 }));
 let selectedDepartmentId = departments[0].id;
 
-function loadDepartments() {
+async function loadScoresFromCSV() {
   try {
-    const saved = JSON.parse(localStorage.getItem(storageKey) || "null");
+    const response = await fetch(`${scoresPath}?v=${Date.now()}`, { cache: "no-store" });
 
-    if (Array.isArray(saved)) {
-      return departmentBank.map((department) => {
-        const savedDepartment = saved.find((item) => item.id === department.id);
-
-        return {
-          ...department,
-          score: savedDepartment ? clampScore(Number(savedDepartment.score)) : 0,
-        };
-      });
+    if (!response.ok) {
+      console.warn(`scores.csv could not be loaded. Status: ${response.status}`);
+      return;
     }
-  } catch (error) {
-    console.warn("Could not load saved department scores", error);
-  }
 
-  return departmentBank.map((department) => ({ ...department, score: 0 }));
+    const csvText = await response.text();
+    const scoreMap = parseScoresCSV(csvText);
+
+    departments = departmentBank.map((department) => ({
+      ...department,
+      score: scoreMap.has(department.id) ? clampScore(Number(scoreMap.get(department.id))) : 0,
+    }));
+  } catch (error) {
+    console.warn("Could not load scores.csv. Falling back to zero scores.", error);
+  }
 }
 
-function saveDepartments() {
-  localStorage.setItem(
-    storageKey,
-    JSON.stringify(departments.map(({ id, score }) => ({ id, score })))
-  );
+function parseScoresCSV(csvText) {
+  const scoreMap = new Map();
+  const lines = csvText.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+
+  for (const line of lines) {
+    const columns = line.split(",").map((cell) => cell.trim());
+    const id = columns[0];
+    const score = columns[1];
+
+    if (!id || id.toLowerCase() === "id") continue;
+    if (score === undefined || score === "" || Number.isNaN(Number(score))) continue;
+
+    scoreMap.set(id, Number(score));
+  }
+
+  return scoreMap;
 }
 
 function getGridPosition(index) {
@@ -100,21 +111,18 @@ function getGridPosition(index) {
   if (index >= 6 && index <= 10) return { row: index - 4, col: 6 };
   if (index >= 11 && index <= 15) return { row: 6, col: 16 - index };
   if (index >= 16 && index <= 19) return { row: 21 - index, col: 1 };
-
   return { row: 1, col: 1 };
 }
 
 function getDisplayedBoardLevel(score) {
   if (score >= 100) return null;
   if (score <= 0) return 0;
-
   return Math.floor(score / 5) * 5;
 }
 
 function getDisplayedSpireLevel(score) {
   if (score < 100) return score;
   if (score >= 110) return 110;
-
   return Math.floor((score - 100) / 2) * 2 + 100;
 }
 
@@ -124,7 +132,6 @@ function getDisplayedLevel(score) {
 
 function clampScore(value) {
   if (Number.isNaN(value)) return 0;
-
   return Math.max(0, Math.min(110, value));
 }
 
@@ -180,7 +187,6 @@ function tileHtml(space, teams) {
 
 function levelBottom(score) {
   const pct = Math.min(1, Math.max(0, (score - 100) / 10));
-
   return 48 + pct * 424;
 }
 
@@ -191,26 +197,19 @@ function spireHtml() {
     ? [...climbers].sort((a, b) => b.score - a.score || a.name.localeCompare(b.name))[0]
     : null;
 
-  const levelLines = spireLevels
-    .map(
-      (level) => `
-        <div class="spire-level" style="bottom:${levelBottom(level)}px">
-          <div class="spire-level-label ${level === 110 ? "crown" : ""}">${level}</div>
-          <div class="spire-level-line"></div>
-        </div>
-      `
-    )
-    .join("");
+  const levelLines = spireLevels.map((level) => `
+    <div class="spire-level" style="bottom:${levelBottom(level)}px">
+      <div class="spire-level-label ${level === 110 ? "crown" : ""}">${level}</div>
+      <div class="spire-level-line"></div>
+    </div>
+  `).join("");
 
-  const climberMarkers = climbers
-    .map((team, index) => {
-      const displayLevel = getDisplayedSpireLevel(team.score);
-      const bottom = levelBottom(displayLevel) - 17;
-      const sideOffset = index % 2 === 0 ? 214 : 52;
-
-      return `<div class="spire-marker-wrap" style="bottom:${bottom}px; left:${sideOffset}px">${markerHtml(team, true)}</div>`;
-    })
-    .join("");
+  const climberMarkers = climbers.map((team, index) => {
+    const displayLevel = getDisplayedSpireLevel(team.score);
+    const bottom = levelBottom(displayLevel) - 17;
+    const sideOffset = index % 2 === 0 ? 214 : 52;
+    return `<div class="spire-marker-wrap" style="bottom:${bottom}px; left:${sideOffset}px">${markerHtml(team, true)}</div>`;
+  }).join("");
 
   const championHtml = champion
     ? `
@@ -224,59 +223,44 @@ function spireHtml() {
     `
     : `<div class="champion-score" style="margin-top:8px">No department has reached 100 yet.</div>`;
 
-  const legendRows = spireLevels
-    .map((level) => {
-      const teamsAtLevel = climbers.filter((team) => getDisplayedSpireLevel(team.score) === level);
-
-      return `
-        <div class="spire-legend-row">
-          <div class="legend-level ${level === 110 ? "crown" : ""}">${level}</div>
-          <div class="legend-label">${level === 110 ? "Crown" : level === 100 ? "Entry" : "Climb"}</div>
-          <div class="legend-markers">${teamsAtLevel.map((team) => markerHtml(team)).join("")}</div>
-        </div>
-      `;
-    })
-    .join("");
+  const legendRows = spireLevels.map((level) => {
+    const teamsAtLevel = climbers.filter((team) => getDisplayedSpireLevel(team.score) === level);
+    return `
+      <div class="spire-legend-row">
+        <div class="legend-level ${level === 110 ? "crown" : ""}">${level}</div>
+        <div class="legend-label">${level === 110 ? "Crown" : level === 100 ? "Entry" : "Climb"}</div>
+        <div class="legend-markers">${teamsAtLevel.map((team) => markerHtml(team)).join("")}</div>
+      </div>
+    `;
+  }).join("");
 
   return `
     <div class="spire-card">
       <div class="spire-bg-one"></div>
       <div class="spire-bg-two"></div>
       <div class="spire-bg-three"></div>
-
       <div class="spire-layout">
         <div class="spire-info">
           <div class="spire-eyebrow">The Race to</div>
           <h2 class="spire-title">The Spire</h2>
-          <p class="spire-copy">Scores are logged exactly, while board and Spire tokens snap to the last completed threshold.</p>
-
+          <p class="spire-copy">Scores are loaded from scores.csv. Board and Spire tokens snap to the last completed threshold.</p>
           <div class="spire-top-box">
             <div class="spire-box-label">Current Top Climber</div>
             ${championHtml}
           </div>
         </div>
-
         <div class="spire-tower">
           <div class="tower-glow"></div>
           <div class="tower-spire"></div>
           <div class="tower-neck"></div>
           <div class="tower-top"></div>
-
-          <div class="tower-body">
-            <div class="tower-center-column"></div>
-            <div class="tower-fade"></div>
-          </div>
-
+          <div class="tower-body"><div class="tower-center-column"></div><div class="tower-fade"></div></div>
           <div class="tower-base-one"></div>
           <div class="tower-base-two"></div>
-
           ${levelLines}
           ${climberMarkers}
         </div>
-
-        <div class="spire-legend">
-          ${legendRows}
-        </div>
+        <div class="spire-legend">${legendRows}</div>
       </div>
     </div>
   `;
@@ -288,7 +272,6 @@ function renderBoard() {
 
   boardSpaces.forEach((space) => {
     const gp = getGridPosition(space.id);
-
     const departmentsHere = departments.filter(
       (department) => getDisplayedBoardLevel(department.score) === space.points
     );
@@ -297,7 +280,6 @@ function renderBoard() {
     cell.style.gridColumn = gp.col;
     cell.style.gridRow = gp.row;
     cell.innerHTML = tileHtml(space, departmentsHere);
-
     board.appendChild(cell);
   });
 
@@ -305,61 +287,40 @@ function renderBoard() {
   spireCell.style.gridColumn = "2 / span 4";
   spireCell.style.gridRow = "2 / span 4";
   spireCell.innerHTML = spireHtml();
-
   board.appendChild(spireCell);
 }
 
 function renderRankings() {
   const rankings = document.getElementById("rankings");
   const departmentCount = document.getElementById("departmentCount");
-
   departmentCount.textContent = `${departments.length} departments`;
 
   const rankedDepartments = [...departments].sort(
     (a, b) => b.score - a.score || a.name.localeCompare(b.name)
   );
 
-  rankings.innerHTML = rankedDepartments
-    .map((department, index) => {
-      const displayLevel = getDisplayedLevel(department.score);
-      const rank = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`;
+  rankings.innerHTML = rankedDepartments.map((department, index) => {
+    const displayLevel = getDisplayedLevel(department.score);
+    const rank = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`;
 
-      return `
-        <div class="ranking-row ${index < 3 ? "top" : ""}">
-          <div class="ranking-left">
-            <div class="rank-badge">${rank}</div>
-            ${markerHtml(department)}
-
-            <div class="ranking-name-wrap">
-              <span class="ranking-name">${escapeHtml(department.name)}</span>
-              ${
-                department.score !== displayLevel
-                  ? `<span class="ranking-shown">shown at ${displayLevel}</span>`
-                  : ""
-              }
-            </div>
+    return `
+      <div class="ranking-row ${index < 3 ? "top" : ""}">
+        <div class="ranking-left">
+          <div class="rank-badge">${rank}</div>
+          ${markerHtml(department)}
+          <div class="ranking-name-wrap">
+            <span class="ranking-name">${escapeHtml(department.name)}</span>
+            ${department.score !== displayLevel ? `<span class="ranking-shown">shown at ${displayLevel}</span>` : ""}
           </div>
-
-          <span class="ranking-score">${department.score} pts</span>
         </div>
-      `;
-    })
-    .join("");
+        <span class="ranking-score">${department.score} pts</span>
+      </div>
+    `;
+  }).join("");
 }
 
 function syncControls() {
-  const select = document.getElementById("departmentSelect");
-  const score = document.getElementById("scoreInput");
-
-  select.innerHTML = departments
-    .map((department) => `<option value="${department.id}">${escapeHtml(department.name)}</option>`)
-    .join("");
-
-  select.value = selectedDepartmentId;
-
-  const selected = departments.find((department) => department.id === selectedDepartmentId) || departments[0];
-
-  score.value = String(selected.score);
+  // Score controls have been removed. Scores are controlled by scores.csv.
 }
 
 function renderAll() {
@@ -368,47 +329,13 @@ function renderAll() {
   renderRankings();
 }
 
-function init() {
-  const select = document.getElementById("departmentSelect");
-  const score = document.getElementById("scoreInput");
-  const move = document.getElementById("moveButton");
-  const reset = document.getElementById("resetButton");
+function initControls() {
+  // Score controls have been removed. Scores are controlled by scores.csv.
+}
 
-  select.addEventListener("change", () => {
-    selectedDepartmentId = select.value;
-
-    const selected = departments.find((department) => department.id === selectedDepartmentId);
-
-    score.value = String(selected ? selected.score : 0);
-  });
-
-  score.addEventListener("blur", () => {
-    score.value = String(clampScore(Number(score.value)));
-  });
-
-  score.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") move.click();
-  });
-
-  move.addEventListener("click", () => {
-    const cleanScore = clampScore(Number(score.value));
-
-    departments = departments.map((department) =>
-      department.id === selectedDepartmentId ? { ...department, score: cleanScore } : department
-    );
-
-    saveDepartments();
-    renderAll();
-  });
-
-  reset.addEventListener("click", () => {
-    departments = departmentBank.map((department) => ({ ...department, score: 0 }));
-    selectedDepartmentId = departments[0].id;
-
-    saveDepartments();
-    renderAll();
-  });
-
+async function init() {
+  initControls();
+  await loadScoresFromCSV();
   renderAll();
 }
 
