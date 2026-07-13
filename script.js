@@ -1,28 +1,32 @@
 "use strict";
 
-const imagePath = (fileName) => `images/${fileName}`;
+const imagePath = (fileName) => `images/${encodeURIComponent(fileName)}`;
 
 const boardSpaceData = [
   { name: "START", points: 0, type: "corner" },
-  { name: "Lobby", points: 5, image: "lobby.webp" },
-  { name: "Marina", points: 10, image: "marina.webp" },
-  { name: "AVIVA", points: 15, image: "aviva.webp" },
-  { name: "Fitness Center", points: 20, image: "fitness-center.webp" },
-  { name: "Ballroom", points: 25, image: "ballroom.webp" },
-  { name: "Azul", points: 30, image: "azul.webp" },
-  { name: "Indigo", points: 35, image: "indigo.webp" },
-  { name: "Resort Pool", points: 40, image: "resort-pool.webp" },
-  { name: "The Club", points: 45, type: "corner", image: "the-club.webp" },
-  { name: "Presidential Suite", points: 50, image: "presidential-suite.webp" },
-  { name: "Kids Club", points: 55, image: "kids-club.webp" },
-  { name: "Snow Room", points: 60, image: "snow-room.webp" },
-  { name: "Pier Top", points: 65, image: "pier-top.webp" },
-  { name: "Guest Room", points: 70, image: "guest-room.webp" },
-  { name: "Valet Arrival", points: 75, image: "valet-arrival.webp" },
-  { name: "Elate Cafe", points: 80, image: "elate-cafe.webp" },
-  { name: "Villas", points: 85, image: "villas.webp" },
-  { name: "Spa Pool", points: 90, image: "spa-pool.webp" },
-  { name: "Waterslides", points: 95, type: "corner", image: "waterslides.webp" },
+
+  { name: "Lobby", points: 5, image: "lobby.jpg" },
+  { name: "Marina", points: 10, image: "Marina.jpg" },
+  { name: "AVIVA", points: 15, image: "Aviva-yacht-RR-6.jpeg" },
+  { name: "Fitness Center", points: 20, image: "Fitness Center.jpg" },
+  { name: "Ballroom", points: 25, image: "Ballroom.jpg" },
+
+  { name: "Azul", points: 30, image: "Azul.jpg" },
+  { name: "Indigo", points: 35, image: "indigo.jpg" },
+  { name: "Resort Pool", points: 40, image: "Resort Pool.jpg" },
+  { name: "The Club", points: 45, type: "corner", image: "The Club.jpg" },
+
+  { name: "Presidential Suite", points: 50, image: "Presidential Suite.jpg" },
+  { name: "Kids Club", points: 55, image: "Kids Club.jpg" },
+  { name: "Snow Room", points: 60, image: "Snow Room.jpg" },
+  { name: "Pier Top", points: 65, image: "Pier Top.jpg" },
+  { name: "Guest Room", points: 70, image: "Guest Room.jpg" },
+  { name: "Valet Arrival", points: 75, image: "Valet Arrival.jpg" },
+
+  { name: "Elate Cafe", points: 80, image: "Elate Cafe.jpg" },
+  { name: "Villas", points: 85, image: "Villas.jpg" },
+  { name: "Spa Pool", points: 90, image: "Spa Pool.jpg" },
+  { name: "Waterslides", points: 95, type: "corner", image: "Waterslides.jpg" },
 ];
 
 const boardSpaces = boardSpaceData.map((space, index) => ({
@@ -70,20 +74,29 @@ let selectedDepartmentId = departments[0].id;
 function loadDepartments() {
   try {
     const saved = JSON.parse(localStorage.getItem(storageKey) || "null");
+
     if (Array.isArray(saved)) {
       return departmentBank.map((department) => {
         const savedDepartment = saved.find((item) => item.id === department.id);
-        return { ...department, score: savedDepartment ? clampScore(Number(savedDepartment.score)) : 0 };
+
+        return {
+          ...department,
+          score: savedDepartment ? clampScore(Number(savedDepartment.score)) : 0,
+        };
       });
     }
   } catch (error) {
     console.warn("Could not load saved department scores", error);
   }
+
   return departmentBank.map((department) => ({ ...department, score: 0 }));
 }
 
 function saveDepartments() {
-  localStorage.setItem(storageKey, JSON.stringify(departments.map(({ id, score }) => ({ id, score }))));
+  localStorage.setItem(
+    storageKey,
+    JSON.stringify(departments.map(({ id, score }) => ({ id, score })))
+  );
 }
 
 function getGridPosition(index) {
@@ -91,18 +104,21 @@ function getGridPosition(index) {
   if (index >= 6 && index <= 10) return { row: index - 4, col: 6 };
   if (index >= 11 && index <= 15) return { row: 6, col: 16 - index };
   if (index >= 16 && index <= 19) return { row: 21 - index, col: 1 };
+
   return { row: 1, col: 1 };
 }
 
 function getDisplayedBoardLevel(score) {
   if (score >= 100) return null;
   if (score <= 0) return 0;
+
   return Math.floor(score / 5) * 5;
 }
 
 function getDisplayedSpireLevel(score) {
   if (score < 100) return score;
   if (score >= 110) return 110;
+
   return Math.floor((score - 100) / 2) * 2 + 100;
 }
 
@@ -112,6 +128,7 @@ function getDisplayedLevel(score) {
 
 function clampScore(value) {
   if (Number.isNaN(value)) return 0;
+
   return Math.max(0, Math.min(110, value));
 }
 
@@ -142,9 +159,12 @@ function markerHtml(team, large = false) {
 function tileHtml(space, teams) {
   const isStart = space.name === "START";
   const cornerClass = space.type === "corner" ? "corner" : "";
-  const image = !isStart && space.imageUrl
-    ? `<img class="tile-img" src="${space.imageUrl}" alt="${escapeHtml(space.name)}" loading="eager" onerror="this.style.display='none'" />`
-    : "";
+
+  const image =
+    !isStart && space.imageUrl
+      ? `${space.imageUrl}" loading="eager" onerror="this.style.display='none'" />`
+      : "";
+
   const startVisual = isStart
     ? `<div class="start-visual"><div class="start-badge"><div class="start-arrow">▶</div><div class="start-word">Begin</div></div></div>`
     : "";
@@ -169,64 +189,97 @@ function levelBottom(score) {
 
 function spireHtml() {
   const climbers = departments.filter((team) => team.score >= 100);
-  const champion = climbers.length ? [...climbers].sort((a, b) => b.score - a.score || a.name.localeCompare(b.name))[0] : null;
 
-  const levelLines = spireLevels.map((level) => `
-    <div class="spire-level" style="bottom:${levelBottom(level)}px">
-      <div class="spire-level-label ${level === 110 ? "crown" : ""}">${level}</div>
-      <div class="spire-level-line"></div>
-    </div>
-  `).join("");
+  const champion = climbers.length
+    ? [...climbers].sort((a, b) => b.score - a.score || a.name.localeCompare(b.name))[0]
+    : null;
 
-  const climberMarkers = climbers.map((team, index) => {
-    const displayLevel = getDisplayedSpireLevel(team.score);
-    const bottom = levelBottom(displayLevel) - 17;
-    const sideOffset = index % 2 === 0 ? 214 : 52;
-    return `<div class="spire-marker-wrap" style="bottom:${bottom}px; left:${sideOffset}px">${markerHtml(team, true)}</div>`;
-  }).join("");
+  const levelLines = spireLevels
+    .map(
+      (level) => `
+        <div class="spire-level" style="bottom:${levelBottom(level)}px">
+          <div class="spire-level-label ${level === 110 ? "crown" : ""}">${level}</div>
+          <div class="spire-level-line"></div>
+        </div>
+      `
+    )
+    .join("");
+
+  const climberMarkers = climbers
+    .map((team, index) => {
+      const displayLevel = getDisplayedSpireLevel(team.score);
+      const bottom = levelBottom(displayLevel) - 17;
+      const sideOffset = index % 2 === 0 ? 214 : 52;
+
+      return `<div class="spire-marker-wrap" style="bottom:${bottom}px; left:${sideOffset}px">${markerHtml(team, true)}</div>`;
+    })
+    .join("");
 
   const championHtml = champion
-    ? `<div class="spire-champion">${markerHtml(champion)}<div><div class="champion-name">${escapeHtml(champion.name)}</div><div class="champion-score">${champion.score} pts shown at ${getDisplayedSpireLevel(champion.score)}</div></div></div>`
+    ? `
+      <div class="spire-champion">
+        ${markerHtml(champion)}
+        <div>
+          <div class="champion-name">${escapeHtml(champion.name)}</div>
+          <div class="champion-score">${champion.score} pts shown at ${getDisplayedSpireLevel(champion.score)}</div>
+        </div>
+      </div>
+    `
     : `<div class="champion-score" style="margin-top:8px">No department has reached 100 yet.</div>`;
 
-  const legendRows = spireLevels.map((level) => {
-    const teamsAtLevel = climbers.filter((team) => getDisplayedSpireLevel(team.score) === level);
-    return `
-      <div class="spire-legend-row">
-        <div class="legend-level ${level === 110 ? "crown" : ""}">${level}</div>
-        <div class="legend-label">${level === 110 ? "Crown" : level === 100 ? "Entry" : "Climb"}</div>
-        <div class="legend-markers">${teamsAtLevel.map((team) => markerHtml(team)).join("")}</div>
-      </div>
-    `;
-  }).join("");
+  const legendRows = spireLevels
+    .map((level) => {
+      const teamsAtLevel = climbers.filter((team) => getDisplayedSpireLevel(team.score) === level);
+
+      return `
+        <div class="spire-legend-row">
+          <div class="legend-level ${level === 110 ? "crown" : ""}">${level}</div>
+          <div class="legend-label">${level === 110 ? "Crown" : level === 100 ? "Entry" : "Climb"}</div>
+          <div class="legend-markers">${teamsAtLevel.map((team) => markerHtml(team)).join("")}</div>
+        </div>
+      `;
+    })
+    .join("");
 
   return `
     <div class="spire-card">
       <div class="spire-bg-one"></div>
       <div class="spire-bg-two"></div>
       <div class="spire-bg-three"></div>
+
       <div class="spire-layout">
         <div class="spire-info">
           <div class="spire-eyebrow">The Race to</div>
           <h2 class="spire-title">The Spire</h2>
           <p class="spire-copy">Scores are logged exactly, while board and Spire tokens snap to the last completed threshold.</p>
+
           <div class="spire-top-box">
             <div class="spire-box-label">Current Top Climber</div>
             ${championHtml}
           </div>
         </div>
+
         <div class="spire-tower">
           <div class="tower-glow"></div>
           <div class="tower-spire"></div>
           <div class="tower-neck"></div>
           <div class="tower-top"></div>
-          <div class="tower-body"><div class="tower-center-column"></div><div class="tower-fade"></div></div>
+
+          <div class="tower-body">
+            <div class="tower-center-column"></div>
+            <div class="tower-fade"></div>
+          </div>
+
           <div class="tower-base-one"></div>
           <div class="tower-base-two"></div>
+
           ${levelLines}
           ${climberMarkers}
         </div>
-        <div class="spire-legend">${legendRows}</div>
+
+        <div class="spire-legend">
+          ${legendRows}
+        </div>
       </div>
     </div>
   `;
@@ -238,11 +291,16 @@ function renderBoard() {
 
   boardSpaces.forEach((space) => {
     const gp = getGridPosition(space.id);
-    const departmentsHere = departments.filter((department) => getDisplayedBoardLevel(department.score) === space.points);
+
+    const departmentsHere = departments.filter(
+      (department) => getDisplayedBoardLevel(department.score) === space.points
+    );
+
     const cell = document.createElement("div");
     cell.style.gridColumn = gp.col;
     cell.style.gridRow = gp.row;
     cell.innerHTML = tileHtml(space, departmentsHere);
+
     board.appendChild(cell);
   });
 
@@ -250,41 +308,60 @@ function renderBoard() {
   spireCell.style.gridColumn = "2 / span 4";
   spireCell.style.gridRow = "2 / span 4";
   spireCell.innerHTML = spireHtml();
+
   board.appendChild(spireCell);
 }
 
 function renderRankings() {
   const rankings = document.getElementById("rankings");
   const departmentCount = document.getElementById("departmentCount");
+
   departmentCount.textContent = `${departments.length} departments`;
 
-  const rankedDepartments = [...departments].sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
+  const rankedDepartments = [...departments].sort(
+    (a, b) => b.score - a.score || a.name.localeCompare(b.name)
+  );
 
-  rankings.innerHTML = rankedDepartments.map((department, index) => {
-    const displayLevel = getDisplayedLevel(department.score);
-    const rank = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`;
-    return `
-      <div class="ranking-row ${index < 3 ? "top" : ""}">
-        <div class="ranking-left">
-          <div class="rank-badge">${rank}</div>
-          ${markerHtml(department)}
-          <div class="ranking-name-wrap">
-            <span class="ranking-name">${escapeHtml(department.name)}</span>
-            ${department.score !== displayLevel ? `<span class="ranking-shown">shown at ${displayLevel}</span>` : ""}
+  rankings.innerHTML = rankedDepartments
+    .map((department, index) => {
+      const displayLevel = getDisplayedLevel(department.score);
+      const rank = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`;
+
+      return `
+        <div class="ranking-row ${index < 3 ? "top" : ""}">
+          <div class="ranking-left">
+            <div class="rank-badge">${rank}</div>
+            ${markerHtml(department)}
+
+            <div class="ranking-name-wrap">
+              <span class="ranking-name">${escapeHtml(department.name)}</span>
+              ${
+                department.score !== displayLevel
+                  ? `<span class="ranking-shown">shown at ${displayLevel}</span>`
+                  : ""
+              }
+            </div>
           </div>
+
+          <span class="ranking-score">${department.score} pts</span>
         </div>
-        <span class="ranking-score">${department.score} pts</span>
-      </div>
-    `;
-  }).join("");
+      `;
+    })
+    .join("");
 }
 
 function syncControls() {
   const select = document.getElementById("departmentSelect");
   const score = document.getElementById("scoreInput");
-  select.innerHTML = departments.map((department) => `<option value="${department.id}">${escapeHtml(department.name)}</option>`).join("");
+
+  select.innerHTML = departments
+    .map((department) => `<option value="${department.id}">${escapeHtml(department.name)}</option>`)
+    .join("");
+
   select.value = selectedDepartmentId;
+
   const selected = departments.find((department) => department.id === selectedDepartmentId) || departments[0];
+
   score.value = String(selected.score);
 }
 
@@ -302,7 +379,9 @@ function init() {
 
   select.addEventListener("change", () => {
     selectedDepartmentId = select.value;
+
     const selected = departments.find((department) => department.id === selectedDepartmentId);
+
     score.value = String(selected ? selected.score : 0);
   });
 
@@ -316,7 +395,11 @@ function init() {
 
   move.addEventListener("click", () => {
     const cleanScore = clampScore(Number(score.value));
-    departments = departments.map((department) => department.id === selectedDepartmentId ? { ...department, score: cleanScore } : department);
+
+    departments = departments.map((department) =>
+      department.id === selectedDepartmentId ? { ...department, score: cleanScore } : department
+    );
+
     saveDepartments();
     renderAll();
   });
@@ -324,6 +407,7 @@ function init() {
   reset.addEventListener("click", () => {
     departments = departmentBank.map((department) => ({ ...department, score: 0 }));
     selectedDepartmentId = departments[0].id;
+
     saveDepartments();
     renderAll();
   });
