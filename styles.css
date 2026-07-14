@@ -775,3 +775,38 @@ h1 {
 .tile-teams {
   gap: 5px;
 }
+/* === CENTER SPIRE TITLE ACROSS THE WHOLE SPIRE CARD === */
+
+.spire-card {
+  position: relative;
+}
+
+.spire-heading-block {
+  position: absolute;
+  top: 24px;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  text-align: center;
+  pointer-events: none;
+}
+
+.spire-heading-block .spire-eyebrow,
+.spire-heading-block .spire-title {
+  text-align: center;
+}
+
+.spire-heading-block .spire-eyebrow {
+  display: block;
+  margin: 0 auto 2px;
+}
+
+.spire-heading-block .spire-title {
+  display: block;
+  margin: 0 auto;
+}
+
+/* Push the left-side top climber box down so it does not collide with the centered title */
+.spire-info {
+  padding-top: 84px;
+}
