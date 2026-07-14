@@ -178,12 +178,14 @@ function iconSvg(teamId) {
       <ellipse cx="30.5" cy="27" rx="16" ry="5" fill="#082b49" stroke="#d7b46a" stroke-width="3"/>
       <path fill="none" stroke="#67d5df" stroke-width="3" stroke-linecap="round" d="M23 24c3-4 6-4 9 0 3-4 6-4 9 0"/>
     `, badge),
+
     "pier-top": () => makeIcon(`
       <path fill="#f7efe2" stroke="#d7b46a" stroke-width="3" d="M28 12h8l3 12v28H25V24l3-12z"/>
       <path fill="#67d5df" d="M29 25h6v25h-6z" opacity=".85"/>
       <path fill="#082b49" stroke="#d7b46a" stroke-width="3" d="M18 24h28c2 0 5 6 4 9H14c-1-3 2-9 4-9z"/>
       <path fill="none" stroke="#d7b46a" stroke-width="3" stroke-linecap="round" d="M18 21h28M32 6v8M23 19l-4-5M41 19l4-5"/>
     `, badge),
+
     "pool": () => makeIcon(`
       <path fill="#67d5df" stroke="#d7b46a" stroke-width="3" d="M12 39c7-7 13-7 20 0s13 7 20 0v10c-7 7-13 7-20 0s-13-7-20 0V39z"/>
       <path fill="#f7efe2" stroke="#d7b46a" stroke-width="3" d="M20 24c8-9 16-9 24 0-5-1-8 0-12 3-4-3-7-4-12-3z"/>
@@ -191,18 +193,21 @@ function iconSvg(teamId) {
       <circle cx="48" cy="28" r="6" fill="#d7b46a"/>
       <path fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" d="M16 47c5-4 9-4 14 0M34 47c5 4 9 4 14 0"/>
     `, badge),
+
     "reservations": () => makeIcon(`
       <rect x="17" y="18" width="30" height="33" rx="5" fill="#f7efe2" stroke="#d7b46a" stroke-width="3"/>
       <path fill="#d7b46a" d="M17 24h30v8H17z"/>
       <path fill="none" stroke="#082b49" stroke-width="2" d="M23 37h6M35 37h6M23 44h6M35 44h6"/>
       <path fill="none" stroke="#67d5df" stroke-width="3" stroke-linecap="round" d="M24 15v7M40 15v7"/>
     `, badge),
+
     "bell-service": () => makeIcon(`
       <path fill="#d7b46a" stroke="#ffffff" stroke-width="2" d="M32 15c-9 0-16 7-16 17h32c0-10-7-17-16-17z"/>
       <path fill="#082b49" stroke="#d7b46a" stroke-width="3" d="M13 33h38v8H13z"/>
       <path fill="#d7b46a" d="M29 9h6v7h-6z"/><circle cx="32" cy="8" r="4" fill="#d7b46a"/>
       <path fill="none" stroke="#67d5df" stroke-width="3" stroke-linecap="round" d="M19 48h26"/>
     `, badge),
+
     "ird": () => makeIcon(`
       <path fill="#cbd5e1" stroke="#ffffff" stroke-width="2" d="M14 38c2-11 10-17 18-17s16 6 18 17H14z"/>
       <path fill="#94a3b8" stroke="#d7b46a" stroke-width="3" d="M10 38h44v7H10z"/>
@@ -211,6 +216,7 @@ function iconSvg(teamId) {
       <path fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" d="M20 34h24"/>
       <path fill="none" stroke="#67d5df" stroke-width="3" stroke-linecap="round" d="M18 50h28"/>
     `, badge),
+
     "housekeeping": () => makeIcon(`
       <path fill="#f7efe2" stroke="#d7b46a" stroke-width="3" d="M17 25h30v24H17z"/>
       <path fill="#67d5df" d="M20 30h24v6H20zM20 40h24v5H20z" opacity=".85"/>
@@ -218,12 +224,14 @@ function iconSvg(teamId) {
       <path fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" d="M18 53h30"/>
       <path fill="#d7b46a" d="M48 14l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/>
     `, badge),
+
     "security": () => makeIcon(`
       <path fill="#94a3b8" stroke="#d7b46a" stroke-width="3" d="M16 27h22l6-6v25H16z"/>
       <circle cx="27" cy="36" r="8" fill="#082b49" stroke="#ffffff" stroke-width="3"/>
       <circle cx="27" cy="36" r="3" fill="#67d5df"/>
       <path fill="#d7b46a" d="M44 29l9-5v18l-9-5z"/>
     `, badge),
+
     "guest-services": () => makeIcon(`
       <circle cx="23" cy="29" r="10" fill="#082b49" stroke="#d7b46a" stroke-width="4"/>
       <circle cx="23" cy="29" r="4" fill="#ffffff"/>
@@ -231,57 +239,59 @@ function iconSvg(teamId) {
       <path fill="none" stroke="#d7b46a" stroke-width="4" stroke-linecap="round" d="M44 29v8M52 29v6"/>
       <path fill="none" stroke="#67d5df" stroke-width="3" stroke-linecap="round" d="M17 50h35"/>
     `, badge),
+
     "garni": () => makeIcon(`
       <ellipse cx="26" cy="35" rx="11" ry="15" fill="#ffffff" stroke="#d7b46a" stroke-width="3" transform="rotate(-18 26 35)"/>
       <circle cx="27" cy="37" r="5" fill="#f59e0b"/>
       <path fill="#d7b46a" stroke="#f7efe2" stroke-width="2" d="M37 22c10 3 13 10 8 19-9-3-13-10-8-19z"/>
       <path fill="none" stroke="#67d5df" stroke-width="3" stroke-linecap="round" d="M17 52h32"/>
     `, badge),
+
     "pastry": () => makeIcon(`
-  <path fill="#d9892b" stroke="#d7b46a" stroke-width="3" d="M14 39c4-13 16-21 28-17 7 2 12 7 14 14-8-1-15 2-21 9-8-6-14-8-21-6z"/>
-  <path fill="#f7b267" stroke="#f7efe2" stroke-width="2" d="M18 38c5-8 12-12 20-12-5 4-8 9-10 16-4-3-7-4-10-4z"/>
-  <path fill="#b86a24" opacity=".55" d="M33 44c4-6 9-10 17-10-5 2-9 6-12 12-2 0-4-1-5-2z"/>
-  <path fill="none" stroke="#f7efe2" stroke-width="3" stroke-linecap="round" d="M22 34c6-5 13-7 22-5"/>
-  <path fill="none" stroke="#f7efe2" stroke-width="3" stroke-linecap="round" d="M29 40c4-5 9-7 16-7"/>
-`, badge),
+      <path fill="#d9892b" stroke="#d7b46a" stroke-width="3" d="M13 38c8-18 30-23 41-8-10 0-17 4-22 13-7-7-13-8-19-5z"/>
+      <path fill="none" stroke="#f7efe2" stroke-width="3" stroke-linecap="round" d="M21 34c7-6 14-8 23-5M28 40c5-5 9-7 15-7"/>
+    `, badge),
+
     "sotogrande": () => makeIcon(`
       <path fill="#f7efe2" stroke="#d7b46a" stroke-width="3" d="M19 48V29c0-8 6-14 13-14s13 6 13 14v19H19z"/>
       <path fill="#67d5df" d="M25 48V31c0-4 3-7 7-7s7 3 7 7v17H25z"/>
       <path fill="none" stroke="#d7b46a" stroke-width="3" stroke-linecap="round" d="M17 51h31M21 25h23"/>
       <circle cx="47" cy="19" r="5" fill="#f59e0b"/>
     `, badge),
+
     "saltbreeze": () => makeIcon(`
       <path fill="#f59e0b" stroke="#f7efe2" stroke-width="2" d="M16 38c8-13 24-17 35-8-11 2-19 8-24 19-4-6-7-9-11-11z"/>
       <path fill="none" stroke="#22c55e" stroke-width="4" stroke-linecap="round" d="M35 20c4-8 10-10 17-6M34 21c-7-7-14-6-20 0"/>
       <path fill="none" stroke="#67d5df" stroke-width="4" stroke-linecap="round" d="M17 50c7-4 13-4 20 0 5 3 9 3 14 0"/>
     `, badge),
+
     "calusso": () => makeIcon(`
-  <path fill="#f7efe2" stroke="#d7b46a" stroke-width="3" d="M13 43c3-14 12-24 19-29 7 5 16 15 19 29H13z"/>
-  <path fill="none" stroke="#082b49" stroke-width="3" stroke-linecap="round" d="M32 16v26"/>
-  <path fill="none" stroke="#082b49" stroke-width="3" stroke-linecap="round" d="M24 20l6 22"/>
-  <path fill="none" stroke="#082b49" stroke-width="3" stroke-linecap="round" d="M40 20l-6 22"/>
-  <path fill="none" stroke="#082b49" stroke-width="3" stroke-linecap="round" d="M18 31l10 12"/>
-  <path fill="none" stroke="#082b49" stroke-width="3" stroke-linecap="round" d="M46 31L36 43"/>
-  <path fill="none" stroke="#d7b46a" stroke-width="4" stroke-linecap="round" d="M15 44h34"/>
-  <path fill="none" stroke="#67d5df" stroke-width="3" stroke-linecap="round" d="M17 51c7-4 13-4 20 0 5 3 9 3 14 0"/>
-`, badge),
+      <path fill="#f7efe2" stroke="#d7b46a" stroke-width="3" d="M17 42c2-11 9-20 15-25 6 5 13 14 15 25H17z"/>
+      <path fill="none" stroke="#082b49" stroke-width="3" stroke-linecap="round" d="M32 18v23M25 22l5 19M39 22l-5 19M20 31l8 10M44 31l-8 10"/>
+      <path fill="none" stroke="#d7b46a" stroke-width="4" stroke-linecap="round" d="M17 43h30"/>
+      <path fill="none" stroke="#67d5df" stroke-width="3" stroke-linecap="round" d="M17 50c7-4 13-4 20 0 5 3 9 3 13 0"/>
+    `, badge),
+
     "nectar": () => makeIcon(`
       <path fill="#22c55e" stroke="#d7b46a" stroke-width="3" d="M49 12C29 12 17 25 18 47c20 0 32-13 31-35z"/>
       <path fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" d="M22 44c8-11 15-18 24-28"/>
       <path fill="#67d5df" stroke="#d7b46a" stroke-width="3" d="M20 31h18l-3 22H23l-3-22z" opacity=".8"/>
     `, badge),
+
     "spa": () => makeIcon(`
       <path fill="#f7efe2" stroke="#d7b46a" stroke-width="3" d="M32 13c7 7 8 14 0 23-8-9-7-16 0-23z"/>
       <path fill="#67d5df" stroke="#d7b46a" stroke-width="3" d="M17 25c10 1 16 6 15 18-11-2-16-8-15-18zM47 25c-10 1-16 6-15 18 11-2 16-8 15-18z"/>
       <circle cx="32" cy="34" r="5" fill="#f472b6" stroke="#ffffff" stroke-width="2"/>
       <path fill="none" stroke="#082b49" stroke-width="4" stroke-linecap="round" d="M17 49h30"/>
     `, badge),
+
     "stewarding": () => makeIcon(`
       <circle cx="30" cy="31" r="18" fill="#ffffff" stroke="#d7b46a" stroke-width="4"/>
       <circle cx="30" cy="31" r="10" fill="none" stroke="#67d5df" stroke-width="3"/>
       <path fill="none" stroke="#082b49" stroke-width="4" stroke-linecap="round" d="M45 16v30M51 16v30"/>
       <path fill="none" stroke="#d7b46a" stroke-width="3" stroke-linecap="round" d="M15 52h33"/>
     `, badge),
+
     "engineering": () => makeIcon(`
       <g transform="translate(24 30)">
         <path fill="#d7b46a" d="M0-17l3 6 7-3-3 7 6 3-7 3 3 7-7-3-3 6-3-6-7 3 3-7-6-3 7-3-3-7 7 3z"/>
@@ -294,12 +304,14 @@ function iconSvg(teamId) {
         <circle r="3" fill="#67d5df"/>
       </g>
     `, badge),
+
     "front-office": () => makeIcon(`
       <path fill="#f7efe2" stroke="#d7b46a" stroke-width="3" d="M13 33h38v18H13z"/>
       <path fill="#082b49" stroke="#d7b46a" stroke-width="3" d="M18 19h28v14H18z"/>
       <path fill="#67d5df" d="M22 24h20v5H22z"/>
       <circle cx="32" cy="42" r="4" fill="#d7b46a"/>
     `, badge),
+
     "banquets-foh": () => makeIcon(`
       <path fill="#d7b46a" d="M22 12h20l-3 20H25L22 12z"/>
       <path fill="#67d5df" d="M25 17h14l-2 10H27z"/>
@@ -322,8 +334,7 @@ function markerHtml(team, large = false) {
     return `
       <div class="marker icon-marker ${large ? "large" : ""} ${team.color} ${rankClass}" style="${sizeStyle}${rankStyle}" title="${escapeHtml(team.name)} - ${team.score} pts">
         ${icon}
-      </div>
-    `;
+      </div>`;
   }
 
   return `<div class="marker ${large ? "large" : ""} ${team.color} ${rankClass}" style="${rankStyle}" title="${escapeHtml(team.name)} - ${team.score} pts">${initials}</div>`;
