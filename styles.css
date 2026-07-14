@@ -710,3 +710,68 @@ h1 {
 .legend-level.crown { color: #8c6f2f; }
 .legend-label { flex: 1; color: #64748b; font-size: 12px; }
 .legend-markers { min-width: 42px; display: flex; justify-content: flex-end; gap: 4px; }
+
+/* === PILOT DEPARTMENT TOKEN STYLES === */
+/* Paste at the bottom of styles.css after the current marker styles. */
+
+.marker.token-marker {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  outline: none;
+  overflow: visible;
+}
+
+.marker.token-marker.large {
+  width: 42px;
+  height: 42px;
+}
+
+.token-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 5px 6px rgba(0, 0, 0, 0.34));
+}
+
+.token-marker.rank-gold .token-img,
+.marker.rank-gold:not(.token-marker) {
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.95)) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.34));
+}
+
+.token-marker.rank-silver .token-img,
+.marker.rank-silver:not(.token-marker) {
+  filter: drop-shadow(0 0 8px rgba(220, 220, 220, 0.95)) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.34));
+}
+
+.token-marker.rank-bronze .token-img,
+.marker.rank-bronze:not(.token-marker) {
+  filter: drop-shadow(0 0 8px rgba(205, 127, 50, 0.95)) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.34));
+}
+
+.token-missing {
+  width: 28px !important;
+  height: 28px !important;
+  border: 2px solid white !important;
+  border-radius: 999px !important;
+  background: #082b49 !important;
+  color: white !important;
+  font-size: 8px !important;
+  font-weight: 950 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.ranking-row .marker.token-marker {
+  width: 32px;
+  height: 32px;
+}
+
+.tile-teams {
+  gap: 5px;
+}
