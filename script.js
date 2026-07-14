@@ -175,56 +175,87 @@ function iconSvg(teamId) {
   const gold = "#d7b46a";
   const navy = "#082b49";
   const aqua = "#67d5df";
+  const cream = "#f7efe2";
   const white = "#ffffff";
 
-  if (teamId === "elate") {
-    return `
-      <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
-        <path fill="${white}" d="M14 24h32v13c0 9-7 16-16 16S14 46 14 37V24z"/>
-        <path fill="none" stroke="${gold}" stroke-width="4" d="M46 29h4c5 0 5 10 0 10h-4"/>
-        <path fill="none" stroke="${gold}" stroke-width="4" d="M14 24h32v13c0 9-7 16-16 16S14 46 14 37V24z"/>
-        <ellipse cx="30" cy="24" rx="18" ry="6" fill="${navy}" stroke="${gold}" stroke-width="3"/>
-        <path fill="none" stroke="${aqua}" stroke-width="3" stroke-linecap="round" d="M23 20c3-4 6-4 9 0 3-4 6-4 9 0"/>
-        <path fill="none" stroke="${gold}" stroke-width="3" stroke-linecap="round" d="M19 54h27"/>
-      </svg>`;
-  }
+  const isBoh = teamId.endsWith("-boh");
+  const baseId = teamId
+    .replace("-boh", "")
+    .replace("windows-ird", "ird")
+    .replace("banquets", "banquets-foh");
 
-  if (teamId === "pier-top") {
-    return `
-      <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
-        <path fill="${white}" stroke="${gold}" stroke-width="3" d="M28 12h8l3 11v30H25V23l3-11z"/>
-        <path fill="${aqua}" d="M29 24h6v26h-6z" opacity=".85"/>
-        <path fill="${navy}" stroke="${gold}" stroke-width="3" d="M20 22h24c2 0 5 6 4 9H16c-1-3 2-9 4-9z"/>
-        <path fill="none" stroke="${gold}" stroke-width="3" stroke-linecap="round" d="M18 20h28M32 6v8M23 18l-4-5M41 18l4-5"/>
-        <path fill="${gold}" d="M30 3h4v8h-4z"/>
-      </svg>`;
-  }
+  const iconMap = {
+    "elate": "☕",
+    "nectar": "🍃",
+    "pier-top": "♜",
+    "pool": "◒",
+    "spa": "✿",
+    "calusso": "🐚",
+    "reservations": "●",
+    "ird": "◉",
+    "garni": "🥐",
+    "sotogrande": "◆",
+    "saltbreeze": "✦",
+    "security": "◆",
+    "guest-services": "⚿",
+    "bell-service": "▣",
+    "pastry": "◕",
+    "stewarding": "◎",
+    "housekeeping": "✧",
+    "engineering": "⚙",
+    "front-office": "▰",
+    "banquets-foh": "◈",
+  };
 
-  if (teamId === "pool") {
-    return `
-      <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
-        <path fill="${aqua}" stroke="${gold}" stroke-width="3" d="M12 39c7-7 13-7 20 0s13 7 20 0v10c-7 7-13 7-20 0s-13-7-20 0V39z"/>
-        <path fill="${white}" stroke="${gold}" stroke-width="3" d="M19 23c9-10 17-10 26 0-5-2-8-1-13 2-5-3-8-4-13-2z"/>
-        <path fill="none" stroke="${navy}" stroke-width="3" stroke-linecap="round" d="M32 25v18"/>
-        <circle cx="48" cy="28" r="6" fill="${gold}"/>
-        <path fill="none" stroke="${white}" stroke-width="3" stroke-linecap="round" d="M16 47c5-4 9-4 14 0M34 47c5 4 9 4 14 0"/>
-      </svg>`;
-  }
+  const accentMap = {
+    "elate": "#f7efe2",
+    "nectar": "#91c96b",
+    "pier-top": "#67d5df",
+    "pool": "#67d5df",
+    "spa": "#9de2dd",
+    "calusso": "#f7efe2",
+    "reservations": "#d7b46a",
+    "ird": "#f7efe2",
+    "garni": "#f7b267",
+    "sotogrande": "#2dd4bf",
+    "saltbreeze": "#f59e0b",
+    "security": "#94a3b8",
+    "guest-services": "#d7b46a",
+    "bell-service": "#facc15",
+    "pastry": "#f9a8d4",
+    "stewarding": "#d1d5db",
+    "housekeeping": "#86efac",
+    "engineering": "#fb923c",
+    "front-office": "#7dd3fc",
+    "banquets-foh": "#f0abfc",
+  };
 
-  if (teamId === "reservations") {
-    return `
-      <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
-        <path fill="${gold}" stroke="${white}" stroke-width="2" d="M32 15c-9 0-16 7-16 17h32c0-10-7-17-16-17z"/>
-        <path fill="${navy}" stroke="${gold}" stroke-width="3" d="M13 33h38v8H13z"/>
-        <path fill="${gold}" d="M29 9h6v7h-6z"/>
-        <circle cx="32" cy="8" r="4" fill="${gold}"/>
-        <path fill="none" stroke="${aqua}" stroke-width="3" stroke-linecap="round" d="M19 48h26"/>
-        <path fill="${white}" d="M21 36h22v2H21z" opacity=".8"/>
-      </svg>`;
-  }
+  const symbol = iconMap[baseId];
+  if (!symbol) return "";
 
-  return "";
+  const accent = accentMap[baseId] || cream;
+  const bohBadge = isBoh
+    ? `<g><circle cx="49" cy="49" r="11" fill="${navy}" stroke="${gold}" stroke-width="3"/><text x="49" y="54" text-anchor="middle" font-size="13" font-weight="900" fill="${white}" font-family="Arial, sans-serif">B</text></g>`
+    : "";
+
+  const extraIcon = (() => {
+    if (baseId === "reservations") return `<path d="M20 36h24v7H20z" fill="${gold}"/><path d="M24 33c1-8 6-13 8-13s7 5 8 13H24z" fill="${gold}" stroke="${white}" stroke-width="2"/><circle cx="32" cy="18" r="4" fill="${gold}"/>`;
+    if (baseId === "pool") return `<path d="M14 42c6-5 11-5 17 0s12 5 19 0" fill="none" stroke="${aqua}" stroke-width="6" stroke-linecap="round"/><path d="M20 28c8-9 16-9 24 0" fill="none" stroke="${gold}" stroke-width="5" stroke-linecap="round"/>`;
+    if (baseId === "pier-top") return `<path d="M29 12h6l3 13v26H26V25z" fill="${cream}" stroke="${gold}" stroke-width="3"/><path d="M18 24h28c2 0 4 5 4 8H14c0-3 2-8 4-8z" fill="${navy}" stroke="${gold}" stroke-width="3"/>`;
+    if (baseId === "elate") return `<path d="M17 27h28v12c0 8-6 14-14 14S17 47 17 39V27z" fill="${cream}" stroke="${gold}" stroke-width="3"/><path d="M45 31h5c4 0 4 8 0 8h-5" fill="none" stroke="${gold}" stroke-width="3"/><ellipse cx="31" cy="27" rx="15" ry="5" fill="${navy}" stroke="${gold}" stroke-width="3"/>`;
+    return `<text x="32" y="40" text-anchor="middle" font-size="30" font-weight="900" fill="${accent}" font-family="Arial, sans-serif">${symbol}</text>`;
+  })();
+
+  return `
+    <svg width="100%" height="100%" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+      <circle cx="32" cy="32" r="27" fill="${navy}" stroke="${gold}" stroke-width="4"/>
+      <circle cx="32" cy="32" r="21" fill="rgba(103,213,223,0.18)" stroke="rgba(255,255,255,0.22)" stroke-width="2"/>
+      ${extraIcon}
+      ${bohBadge}
+    </svg>
+  `;
 }
+
 
 function markerHtml(team, large = false) {
   const rankClass = getRankClass(team.id);
