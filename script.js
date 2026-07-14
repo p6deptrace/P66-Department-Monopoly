@@ -2,6 +2,15 @@
 
 const imagePath = (fileName) => `Images/${fileName}`;
 const scoresPath = "scores.csv";
+const tokenPath = (fileName) => `Tokens/${encodeURIComponent(fileName)}`;
+
+// Pilot token set. Upload these exact PNG files to a folder named Tokens in the repo root.
+const tokenImages = {
+  "pier-top": "Pier Top Piece V2.png",
+  "elate": "Elate Piece 2.png",
+  "pool": "Pool Piece V2.png",
+  "reservations": "Reservations Piece V2.png",
+};
 
 const boardSpaceData = [
   { name: "START", points: 0, type: "corner", image: "Start.png" },
@@ -150,8 +159,35 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+function getRankClass(teamId) {
+  const rankedDepartments = [...departments].sort(
+    (a, b) => b.score - a.score || a.name.localeCompare(b.name)
+  );
+
+  const rankIndex = rankedDepartments.findIndex((department) => department.id === teamId);
+
+  if (rankIndex === 0) return "rank-gold";
+  if (rankIndex === 1) return "rank-silver";
+  if (rankIndex === 2) return "rank-bronze";
+
+  return "";
+}
+
 function markerHtml(team, large = false) {
-  return `<div class="marker ${large ? "large" : ""} ${team.color}" title="${escapeHtml(team.name)} - ${team.score} pts">${escapeHtml(getInitials(team.name))}</div>`;
+  const rankClass = getRankClass(team.id);
+  const tokenFile = tokenImages[team.id];
+  const initials = escapeHtml(getInitials(team.name));
+
+  if (tokenFile) {
+    return `
+      <div class="marker token-marker ${large ? "large" : ""} ${rankClass}" title="${escapeHtml(team.name)} - ${team.score} pts">
+        <img class="token-img" src="${tokenPath(tokenFile)}" alt="${escapeHtml(team.name)} token" loading="eager" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+        <span class="token-fallback">${initials}</span>
+      </div>
+    `;
+  }
+
+  return `<div class="marker ${large ? "large" : ""} ${team.color} ${rankClass}" title="${escapeHtml(team.name)} - ${team.score} pts">${initials}</div>`;
 }
 
 function tileHtml(space, teams) {
