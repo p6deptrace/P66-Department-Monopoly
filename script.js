@@ -238,10 +238,12 @@ function iconSvg(teamId) {
       <path fill="none" stroke="#67d5df" stroke-width="3" stroke-linecap="round" d="M17 52h32"/>
     `, badge),
     "pastry": () => makeIcon(`
-      <path fill="#d9892b" stroke="#d7b46a" stroke-width="3" d="M12 38c4-13 18-22 32-16 7 3 11 8 12 14-9-2-17 0-23 8-7-6-14-8-21-6z"/>
-      <path fill="none" stroke="#f7efe2" stroke-width="3" stroke-linecap="round" d="M22 32c7-5 15-6 24-2M28 39c5-5 10-7 17-6"/>
-      <path fill="none" stroke="#8b4513" stroke-width="2" stroke-linecap="round" opacity=".45" d="M18 38c7-9 14-13 24-13M31 44c4-5 9-8 16-9"/>
-    `, badge),
+  <path fill="#d9892b" stroke="#d7b46a" stroke-width="3" d="M14 39c4-13 16-21 28-17 7 2 12 7 14 14-8-1-15 2-21 9-8-6-14-8-21-6z"/>
+  <path fill="#f7b267" stroke="#f7efe2" stroke-width="2" d="M18 38c5-8 12-12 20-12-5 4-8 9-10 16-4-3-7-4-10-4z"/>
+  <path fill="#b86a24" opacity=".55" d="M33 44c4-6 9-10 17-10-5 2-9 6-12 12-2 0-4-1-5-2z"/>
+  <path fill="none" stroke="#f7efe2" stroke-width="3" stroke-linecap="round" d="M22 34c6-5 13-7 22-5"/>
+  <path fill="none" stroke="#f7efe2" stroke-width="3" stroke-linecap="round" d="M29 40c4-5 9-7 16-7"/>
+`, badge),
     "sotogrande": () => makeIcon(`
       <path fill="#f7efe2" stroke="#d7b46a" stroke-width="3" d="M19 48V29c0-8 6-14 13-14s13 6 13 14v19H19z"/>
       <path fill="#67d5df" d="M25 48V31c0-4 3-7 7-7s7 3 7 7v17H25z"/>
@@ -254,11 +256,15 @@ function iconSvg(teamId) {
       <path fill="none" stroke="#67d5df" stroke-width="4" stroke-linecap="round" d="M17 50c7-4 13-4 20 0 5 3 9 3 14 0"/>
     `, badge),
     "calusso": () => makeIcon(`
-      <path fill="#f7efe2" stroke="#d7b46a" stroke-width="3" d="M13 43c2-14 11-25 19-30 8 5 17 16 19 30H13z"/>
-      <path fill="none" stroke="#082b49" stroke-width="3" stroke-linecap="round" d="M32 15v27M24 20l6 22M40 20l-6 22M18 30l10 13M46 30L36 43"/>
-      <path fill="none" stroke="#d7b46a" stroke-width="3" stroke-linecap="round" d="M15 44h34"/>
-      <path fill="none" stroke="#67d5df" stroke-width="3" stroke-linecap="round" d="M16 50c7-4 13-4 20 0 5 3 9 3 13 0"/>
-    `, badge),
+  <path fill="#f7efe2" stroke="#d7b46a" stroke-width="3" d="M13 43c3-14 12-24 19-29 7 5 16 15 19 29H13z"/>
+  <path fill="none" stroke="#082b49" stroke-width="3" stroke-linecap="round" d="M32 16v26"/>
+  <path fill="none" stroke="#082b49" stroke-width="3" stroke-linecap="round" d="M24 20l6 22"/>
+  <path fill="none" stroke="#082b49" stroke-width="3" stroke-linecap="round" d="M40 20l-6 22"/>
+  <path fill="none" stroke="#082b49" stroke-width="3" stroke-linecap="round" d="M18 31l10 12"/>
+  <path fill="none" stroke="#082b49" stroke-width="3" stroke-linecap="round" d="M46 31L36 43"/>
+  <path fill="none" stroke="#d7b46a" stroke-width="4" stroke-linecap="round" d="M15 44h34"/>
+  <path fill="none" stroke="#67d5df" stroke-width="3" stroke-linecap="round" d="M17 51c7-4 13-4 20 0 5 3 9 3 14 0"/>
+`, badge),
     "nectar": () => makeIcon(`
       <path fill="#22c55e" stroke="#d7b46a" stroke-width="3" d="M49 12C29 12 17 25 18 47c20 0 32-13 31-35z"/>
       <path fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" d="M22 44c8-11 15-18 24-28"/>
