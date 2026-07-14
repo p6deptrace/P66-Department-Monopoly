@@ -2,15 +2,6 @@
 
 const imagePath = (fileName) => `Images/${fileName}`;
 const scoresPath = "scores.csv";
-const tokenPath = (fileName) => `Tokens/${encodeURIComponent(fileName)}`;
-
-// Pilot token set. Upload these exact PNG files to a folder named Tokens in the repo root.
-const tokenImages = {
-  "pier-top": "Pier Top Piece V2.png",
-  "elate": "Elate Piece 2.png",
-  "pool": "Pool Piece V2.png",
-  "reservations": "Reservations Piece V2.png",
-};
 
 const boardSpaceData = [
   { name: "START", points: 0, type: "corner", image: "Start.png" },
@@ -173,21 +164,84 @@ function getRankClass(teamId) {
   return "";
 }
 
+function getRankStyle(rankClass) {
+  if (rankClass === "rank-gold") return "box-shadow:0 0 0 2px rgba(215,180,106,.95), 0 0 16px rgba(255,215,0,.95), 0 10px 18px rgba(15,23,42,.28);";
+  if (rankClass === "rank-silver") return "box-shadow:0 0 0 2px rgba(226,232,240,.95), 0 0 14px rgba(226,232,240,.95), 0 10px 18px rgba(15,23,42,.28);";
+  if (rankClass === "rank-bronze") return "box-shadow:0 0 0 2px rgba(205,127,50,.95), 0 0 14px rgba(205,127,50,.9), 0 10px 18px rgba(15,23,42,.28);";
+  return "";
+}
+
+function iconSvg(teamId) {
+  const gold = "#d7b46a";
+  const navy = "#082b49";
+  const aqua = "#67d5df";
+  const white = "#ffffff";
+
+  if (teamId === "elate") {
+    return `
+      <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+        <path fill="${white}" d="M14 24h32v13c0 9-7 16-16 16S14 46 14 37V24z"/>
+        <path fill="none" stroke="${gold}" stroke-width="4" d="M46 29h4c5 0 5 10 0 10h-4"/>
+        <path fill="none" stroke="${gold}" stroke-width="4" d="M14 24h32v13c0 9-7 16-16 16S14 46 14 37V24z"/>
+        <ellipse cx="30" cy="24" rx="18" ry="6" fill="${navy}" stroke="${gold}" stroke-width="3"/>
+        <path fill="none" stroke="${aqua}" stroke-width="3" stroke-linecap="round" d="M23 20c3-4 6-4 9 0 3-4 6-4 9 0"/>
+        <path fill="none" stroke="${gold}" stroke-width="3" stroke-linecap="round" d="M19 54h27"/>
+      </svg>`;
+  }
+
+  if (teamId === "pier-top") {
+    return `
+      <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+        <path fill="${white}" stroke="${gold}" stroke-width="3" d="M28 12h8l3 11v30H25V23l3-11z"/>
+        <path fill="${aqua}" d="M29 24h6v26h-6z" opacity=".85"/>
+        <path fill="${navy}" stroke="${gold}" stroke-width="3" d="M20 22h24c2 0 5 6 4 9H16c-1-3 2-9 4-9z"/>
+        <path fill="none" stroke="${gold}" stroke-width="3" stroke-linecap="round" d="M18 20h28M32 6v8M23 18l-4-5M41 18l4-5"/>
+        <path fill="${gold}" d="M30 3h4v8h-4z"/>
+      </svg>`;
+  }
+
+  if (teamId === "pool") {
+    return `
+      <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+        <path fill="${aqua}" stroke="${gold}" stroke-width="3" d="M12 39c7-7 13-7 20 0s13 7 20 0v10c-7 7-13 7-20 0s-13-7-20 0V39z"/>
+        <path fill="${white}" stroke="${gold}" stroke-width="3" d="M19 23c9-10 17-10 26 0-5-2-8-1-13 2-5-3-8-4-13-2z"/>
+        <path fill="none" stroke="${navy}" stroke-width="3" stroke-linecap="round" d="M32 25v18"/>
+        <circle cx="48" cy="28" r="6" fill="${gold}"/>
+        <path fill="none" stroke="${white}" stroke-width="3" stroke-linecap="round" d="M16 47c5-4 9-4 14 0M34 47c5 4 9 4 14 0"/>
+      </svg>`;
+  }
+
+  if (teamId === "reservations") {
+    return `
+      <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+        <path fill="${gold}" stroke="${white}" stroke-width="2" d="M32 15c-9 0-16 7-16 17h32c0-10-7-17-16-17z"/>
+        <path fill="${navy}" stroke="${gold}" stroke-width="3" d="M13 33h38v8H13z"/>
+        <path fill="${gold}" d="M29 9h6v7h-6z"/>
+        <circle cx="32" cy="8" r="4" fill="${gold}"/>
+        <path fill="none" stroke="${aqua}" stroke-width="3" stroke-linecap="round" d="M19 48h26"/>
+        <path fill="${white}" d="M21 36h22v2H21z" opacity=".8"/>
+      </svg>`;
+  }
+
+  return "";
+}
+
 function markerHtml(team, large = false) {
   const rankClass = getRankClass(team.id);
-  const tokenFile = tokenImages[team.id];
+  const rankStyle = getRankStyle(rankClass);
+  const icon = iconSvg(team.id);
   const initials = escapeHtml(getInitials(team.name));
+  const sizeStyle = icon ? (large ? "width:44px;height:44px;font-size:0;" : "width:34px;height:34px;font-size:0;") : "";
 
-  if (tokenFile) {
+  if (icon) {
     return `
-      <div class="marker token-marker ${large ? "large" : ""} ${rankClass}" title="${escapeHtml(team.name)} - ${team.score} pts">
-        <img class="token-img" src="${tokenPath(tokenFile)}" alt="${escapeHtml(team.name)} token" loading="eager" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-        <span class="token-fallback">${initials}</span>
+      <div class="marker icon-marker ${large ? "large" : ""} ${team.color} ${rankClass}" style="${sizeStyle}${rankStyle}" title="${escapeHtml(team.name)} - ${team.score} pts">
+        ${icon}
       </div>
     `;
   }
 
-  return `<div class="marker ${large ? "large" : ""} ${team.color} ${rankClass}" title="${escapeHtml(team.name)} - ${team.score} pts">${initials}</div>`;
+  return `<div class="marker ${large ? "large" : ""} ${team.color} ${rankClass}" style="${rankStyle}" title="${escapeHtml(team.name)} - ${team.score} pts">${initials}</div>`;
 }
 
 function tileHtml(space, teams) {
