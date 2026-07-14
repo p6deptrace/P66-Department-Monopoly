@@ -4,7 +4,7 @@ const imagePath = (fileName) => `Images/${fileName}`;
 const scoresPath = "scores.csv";
 
 const boardSpaceData = [
-  { name: "START", points: 0, type: "corner" },
+  { name: "START", points: 0, type: "corner", image: "Start.png" },
   { name: "Lobby", points: 5, image: "lobby.jpg" },
   { name: "Marina", points: 10, image: "Marina.jpg" },
   { name: "AVIVA", points: 15, image: "Aviva-yacht-RR-6.jpeg" },
@@ -69,6 +69,7 @@ let departments = departmentBank.map((department) => ({ ...department, score: 0 
 async function loadScoresFromCSV() {
   try {
     const response = await fetch(`${scoresPath}?v=${Date.now()}`, { cache: "no-store" });
+
     if (!response.ok) {
       console.warn(`scores.csv could not be loaded. Status: ${response.status}`);
       return;
@@ -94,8 +95,10 @@ function parseScoresCSV(csvText) {
     const columns = line.split(",").map((cell) => cell.trim());
     const id = columns[0];
     const score = columns[1];
+
     if (!id || id.toLowerCase() === "id") continue;
     if (score === undefined || score === "" || Number.isNaN(Number(score))) continue;
+
     scoreMap.set(id, Number(score));
   }
 
@@ -152,20 +155,14 @@ function markerHtml(team, large = false) {
 }
 
 function tileHtml(space, teams) {
-  const isStart = space.name === "START";
   const cornerClass = space.type === "corner" ? "corner" : "";
 
-  const image = !isStart && space.imageUrl
+  const image = space.imageUrl
     ? `<img class="tile-img" src="${space.imageUrl}" alt="${escapeHtml(space.name)}" loading="eager" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" /><div class="image-error" style="display:none;position:absolute;inset:38px 8px 48px 8px;align-items:center;justify-content:center;text-align:center;padding:8px;border-radius:12px;background:rgba(0,0,0,0.45);color:white;font-size:10px;font-weight:900;line-height:1.25;z-index:4;">IMAGE NOT FOUND<br>${escapeHtml(space.imageUrl)}</div>`
-    : "";
-
-  const startVisual = isStart
-    ? `<div class="start-visual"><div class="start-badge"><div class="start-arrow">▶</div><div class="start-word">Begin</div></div></div>`
     : "";
 
   return `
     <div class="tile ${cornerClass}">
-      ${startVisual}
       ${image}
       <div class="tile-overlay"></div>
       <div class="tile-ring"></div>
