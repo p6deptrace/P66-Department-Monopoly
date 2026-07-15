@@ -34,6 +34,51 @@ const boardSpaces = boardSpaceData.map((space, index) => ({
 
 const spireLevels = [110, 108, 106, 104, 102, 100];
 
+const forecastingDepartmentIds = new Set([
+  "elate",
+  "calusso",
+  "nectar",
+  "ird",
+  "garni",
+  "spa",
+  "pier-top",
+  "pool",
+  "reservations",
+  "saltbreeze",
+  "sotogrande",
+]);
+
+const nonForecastingDepartmentIds = new Set([
+  "saltbreeze-boh",
+  "housekeeping",
+  "engineering",
+  "windows-ird-boh",
+  "security",
+  "guest-services",
+  "bell-service",
+  "sotogrande-boh",
+  "pastry",
+  "pier-top-boh",
+  "garni-boh",
+  "calusso-boh",
+  "stewarding",
+  "banquets-boh",
+  "front-office",
+  "banquets-foh",
+]);
+
+function getDepartmentGroup(departmentId) {
+  if (forecastingDepartmentIds.has(departmentId)) return "forecasting";
+  if (nonForecastingDepartmentIds.has(departmentId)) return "nonforecasting";
+  return "other";
+}
+
+function getDepartmentGroupLabel(group) {
+  if (group === "forecasting") return "Forecasting Departments";
+  if (group === "nonforecasting") return "Non-Forecasting Departments";
+  return "Other Departments";
+}
+
 const departmentBank = [
   { id: "elate", name: "Elate", color: "bg-amber-600" },
   { id: "nectar", name: "Nectar", color: "bg-lime-600" },
@@ -164,13 +209,18 @@ function escapeHtml(value) {
 }
 
 function getRankClass(teamId) {
-  const rankedDepartments = [...departments].sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
+  const group = getDepartmentGroup(teamId);
+  const rankedDepartments = [...departments]
+    .filter((department) => getDepartmentGroup(department.id) === group)
+    .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
+
   const rankIndex = rankedDepartments.findIndex((department) => department.id === teamId);
   if (rankIndex === 0) return "rank-gold";
   if (rankIndex === 1) return "rank-silver";
   if (rankIndex === 2) return "rank-bronze";
   return "";
 }
+
 
 function getRankStyle(rankClass) {
   if (rankClass === "rank-gold") return "box-shadow:0 0 0 2px rgba(215,180,106,.95),0 0 16px rgba(255,215,0,.95),0 10px 18px rgba(15,23,42,.28);";
@@ -281,16 +331,55 @@ function renderBoard() {
   board.appendChild(spireCell);
 }
 
+function renderRankingDivision(group) {
+  const rankedDepartments = [...departments]
+    .filter((department) => getDepartmentGroup(department.id) === group)
+    .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
+
+  const rows = rankedDepartments.map((department, index) => {
+    const rank = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`;
+
+    return `
+      <div class="ranking-row ${index < 3 ? "top" : ""}">
+        <div class="ranking-left">
+          <div class="rank-badge">${rank}</div>
+          ${markerHtml(department)}
+          <div class="ranking-name-wrap">
+            <span class="ranking-name">${escapeHtml(department.name)}</span>
+          </div>
+        </div>
+        <span class="ranking-score">${department.score} pts</span>
+      </div>
+    `;
+  }).join("");
+
+  return `
+    <section class="ranking-division ${group}">
+      <div class="ranking-division-header">
+        <h3>${getDepartmentGroupLabel(group)}</h3>
+        <span>${rankedDepartments.length} departments</span>
+      </div>
+      <div class="ranking-division-grid">
+        ${rows}
+      </div>
+    </section>
+  `;
+}
+
 function renderRankings() {
   const rankings = document.getElementById("rankings");
   const departmentCount = document.getElementById("departmentCount");
-  departmentCount.textContent = `${departments.length} departments`;
-  const rankedDepartments = [...departments].sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
-  rankings.innerHTML = rankedDepartments.map((department, index) => {
-    const rank = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`;
-    return `<div class="ranking-row ${index < 3 ? "top" : ""}"><div class="ranking-left"><div class="rank-badge">${rank}</div>${markerHtml(department)}<div class="ranking-name-wrap"><span class="ranking-name">${escapeHtml(department.name)}</span></div></div><span class="ranking-score">${department.score} pts</span></div>`;
-  }).join("");
+
+  const forecastingCount = departments.filter((department) => getDepartmentGroup(department.id) === "forecasting").length;
+  const nonForecastingCount = departments.filter((department) => getDepartmentGroup(department.id) === "nonforecasting").length;
+  departmentCount.textContent = `${forecastingCount} forecasting | ${nonForecastingCount} non-forecasting`;
+
+  rankings.innerHTML = `
+    ${renderRankingDivision("forecasting")}
+    ${renderRankingDivision("nonforecasting")}
+  `;
 }
+
 
 function renderAll() {
   updateStaticText();
