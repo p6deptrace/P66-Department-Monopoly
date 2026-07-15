@@ -297,6 +297,14 @@ function levelBottom(score) {
 function spireHtml() {
   const climbers = departments.filter((team) => team.score >= 100);
   const champion = climbers.length ? [...climbers].sort((a, b) => b.score - a.score || a.name.localeCompare(b.name))[0] : null;
+  const otherClimbers = champion ? climbers.filter((team) => team.id !== champion.id) : climbers;
+  const otherClimbersHtml = otherClimbers.length
+    ? otherClimbers
+        .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name))
+        .map((team) => `<span class="spire-club-member">${markerHtml(team)} <span>${escapeHtml(team.name)}</span></span>`)
+        .join("")
+    : `<div class="spire-club-empty">No additional 100+ departments yet.</div>`;
+
   const levelLines = spireLevels.map((level) => `<div class="spire-level" style="bottom:${levelBottom(level)}px"><div class="spire-level-label ${level === 110 ? "crown" : ""}">${level}</div><div class="spire-level-line"></div></div>`).join("");
   const climberMarkers = climbers.map((team, index) => {
     const displayLevel = getDisplayedSpireLevel(team.score);
@@ -309,7 +317,8 @@ function spireHtml() {
     const teamsAtLevel = climbers.filter((team) => getDisplayedSpireLevel(team.score) === level);
     return `<div class="spire-legend-row"><div class="legend-level ${level === 110 ? "crown" : ""}">${level}</div><div class="legend-label">${level === 110 ? "Crown" : level === 100 ? "Entry" : "Climb"}</div><div class="legend-markers">${teamsAtLevel.map((team) => markerHtml(team)).join("")}</div></div>`;
   }).join("");
-  return `<div class="spire-card"><div class="spire-bg-one"></div><div class="spire-bg-two"></div><div class="spire-bg-three"></div><div class="spire-layout"><div class="spire-info"><div class="spire-heading-block" style="text-align:center;margin-bottom:14px;"><div class="spire-eyebrow" style="text-align:center;">The Race to</div><h2 class="spire-title" style="text-align:center;">The Spire</h2></div><div class="spire-top-box"><div class="spire-box-label">Current Top Climber</div>${championHtml}</div></div><div class="spire-tower"><div class="tower-glow"></div><div class="tower-spire"></div><div class="tower-neck"></div><div class="tower-top"></div><div class="tower-body"><div class="tower-center-column"></div><div class="tower-fade"></div></div><div class="tower-base-one"></div><div class="tower-base-two"></div>${levelLines}${climberMarkers}</div><div class="spire-legend">${legendRows}</div></div></div>`;
+
+  return `<div class="spire-card"><div class="spire-bg-one"></div><div class="spire-bg-two"></div><div class="spire-bg-three"></div><div class="spire-layout"><div class="spire-info"><div class="spire-heading-block" style="text-align:center;margin-bottom:14px;"><div class="spire-eyebrow" style="text-align:center;">The Race to</div><h2 class="spire-title" style="text-align:center;">The Spire</h2></div><div class="spire-top-box"><div class="spire-box-label">Current Top Climber</div>${championHtml}</div><div class="spire-club-box"><div class="spire-box-label">100+ Club</div><div class="spire-club-members">${otherClimbersHtml}</div></div></div><div class="spire-tower"><div class="tower-glow"></div><div class="tower-spire"></div><div class="tower-neck"></div><div class="tower-top"></div><div class="tower-body"><div class="tower-center-column"></div><div class="tower-fade"></div></div><div class="tower-base-one"></div><div class="tower-base-two"></div>${levelLines}${climberMarkers}</div><div class="spire-legend">${legendRows}</div></div></div>`;
 }
 
 
@@ -405,9 +414,6 @@ function renderInsights() {
   insights.innerHTML = `
     ${insightChampionCard("forecasting", "🏆")}
     ${insightChampionCard("nonforecasting", "🏆")}
-    ${insightAverageCard("forecasting")}
-    ${insightAverageCard("nonforecasting")}
-    ${insightClubCard()}
   `;
 }
 
@@ -461,6 +467,10 @@ function renderRankingDivision(group) {
       <div class="ranking-division-grid">
         ${rows}
       </div>
+      <div class="division-average-card">
+        <div class="division-average-label">${getDepartmentGroupLabel(group)} Average</div>
+        <div class="division-average-score">${formatScore(averageScore(rankedDepartments))}</div>
+      </div>
     </section>
   `;
 }
@@ -482,8 +492,8 @@ function renderRankings() {
 
 function renderAll() {
   updateStaticText();
-  renderInsights();
   renderBoard();
+  renderInsights();
   renderRankings();
   updateStaticText();
 }
