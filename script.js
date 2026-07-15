@@ -174,7 +174,7 @@ function getRankClass(teamId) {
 
 function getRankStyle(rankClass) {
   if (rankClass === "rank-gold") return "box-shadow:0 0 0 2px rgba(215,180,106,.95),0 0 16px rgba(255,215,0,.95),0 10px 18px rgba(15,23,42,.28);";
-  if (rankClass === "rank-silver") return "box-shadow:0 0 0 2px rgba(226,232,240,.95),0 0 14px rgba(226,232,240,.95),0 10px 18px rgba(15,23,42,.28);";
+  if (rankClass === "rank-silver") return "box-shadow:0 0 0 3px rgba(226,232,240,1),0 0 18px rgba(255,255,255,.95),0 0 30px rgba(191,219,254,.8),0 10px 18px rgba(15,23,42,.28);";
   if (rankClass === "rank-bronze") return "box-shadow:0 0 0 2px rgba(205,127,50,.95),0 0 14px rgba(205,127,50,.9),0 10px 18px rgba(15,23,42,.28);";
   return "";
 }
