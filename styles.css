@@ -962,3 +962,65 @@ h1 {
     gap: 18px;
   }
 }
+
+/* === GROUPED DEPARTMENT RANKINGS === */
+.rankings-grid {
+  display: block;
+}
+
+.ranking-division + .ranking-division {
+  margin-top: 18px;
+}
+
+.ranking-division-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 10px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(215, 180, 106, 0.44);
+  background: linear-gradient(135deg, rgba(8, 43, 73, 0.95), rgba(11, 71, 117, 0.88));
+  color: white;
+}
+
+.ranking-division-header h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 950;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ranking-division-header span {
+  flex: 0 0 auto;
+  color: #d7b46a;
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ranking-division-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+@media (max-width: 1050px) {
+  .ranking-division-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .ranking-division-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ranking-division-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
