@@ -3,84 +3,121 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Pier Sixty-Six Department Race</title>
+  <title>Pier Sixty-Six Department Monopoly</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
+
 <body>
   <main class="app-shell">
+
     <section class="header-row no-controls-header">
-      <div>
-        <div class="eyebrow">CSV Scoreboard Version</div>
-        <h1>Pier Sixty-Six Department Race</h1>
-        <p class="subtitle">Scores are loaded globally from scores.csv. Board pieces snap to the last completed 5-point tile. Spire pieces snap to the last completed 2-point rung.</p>
+      <div class="main-title-block">
+        <div class="main-title-kicker">Pier Sixty-Six</div>
+        <h1 class="main-title">Department Monopoly</h1>
       </div>
     </section>
 
-    <section id="board" class="board-grid" aria-label="Department race board"></section>
+    <section id="board" class="board-grid" aria-label="Department Monopoly board"></section>
 
     <section class="rankings-card">
       <div class="rankings-header">
-        <div>
+        <div class="rankings-title-block">
           <h2>Department Rankings</h2>
-          <p>Live leaderboard sorted by the latest uploaded scores.csv file.</p>
         </div>
         <div id="departmentCount" class="department-count"></div>
       </div>
+
       <div id="rankings" class="rankings-grid"></div>
     </section>
+
+    <section class="info-card">
+
+      <div class="info-section-title">
+        <div class="info-title-kicker">Game Information</div>
+        <h2>Rules &amp; Rewards</h2>
+      </div>
+
+      <div class="info-panel program-panel">
+        <h3>Program Overview</h3>
+
+        <div class="overview-grid">
+
+          <div class="overview-item">
+            <div class="overview-label">Monthly Winner</div>
+            <div class="overview-copy">
+              Best average score across the month.
+            </div>
+          </div>
+
+          <div class="overview-item">
+            <div class="overview-label">Yearly Winner</div>
+            <div class="overview-copy">
+              Best average score across all weeks.
+            </div>
+          </div>
+
+          <div class="overview-item scoring-item">
+            <div class="overview-label">Scoring Guide</div>
+            <div class="overview-copy">
+              <span>90–100+ Excellent</span>
+              <span>80–89 Strong</span>
+              <span>70–79 Good</span>
+              <span>&lt;60 Needs Support</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="info-panel rewards-panel">
+
+        <div class="rewards-heading-row">
+          <div>
+            <h3>Flexible Reward Options</h3>
+            <p>
+              Each month, Division winners can choose from a variety of rewards, including:
+            </p>
+          </div>
+
+          <div class="rewards-wordmark">Rewards</div>
+        </div>
+
+        <ul class="rewards-list">
+          <li>3 floating holidays</li>
+          <li>Zenova Spa experience, up to a $500 value</li>
+          <li>Dining certificate to a signature restaurant, up to a $500 value</li>
+          <li>Cash prize, $500</li>
+          <li>Premium electronics, up to a $500 value</li>
+          <li>Two-night stay at a sister property</li>
+          <li>Gift card, up to a $500 value</li>
+        </ul>
+
+        <div class="subsection-divider"></div>
+
+        <h3>End-of-Year Grand Prize</h3>
+        <p>
+          The overall top performer for each division will receive the following:
+        </p>
+
+        <ul class="rewards-list">
+          <li>Trip to the CoralTree Leadership Forum for professional development and networking</li>
+          <li>$1,000 cash prize</li>
+          <li>Two additional nights at the resort</li>
+        </ul>
+
+        <div class="subsection-divider"></div>
+
+        <h3>Motivation &amp; Engagement</h3>
+        <p>
+          This program ties rewards directly to performance, driving accountability, engagement, and continuous improvement.
+        </p>
+
+      </div>
+
+    </section>
+
   </main>
 
   <script src="script.js"></script>
 </body>
 </html>
-<section class="rankings-card">
-  <div class="rankings-header">
-    ...
-  </div>
-  <div id="rankings" class="rankings-grid"></div>
-</section>
-<section class="info-card">
-  <div class="info-grid">
-    <div class="info-panel program-panel">
-      <h2>Program Overview</h2>
-
-      <ul class="overview-list">
-        <li><strong>Monthly winner:</strong> best average across the month</li>
-        <li><strong>Yearly winner:</strong> best average across all weeks</li>
-        <li><strong>Scoring guide:</strong> 90–100+ Excellent | 80–89 Strong | 70–79 Good | &lt;60 Needs Support</li>
-      </ul>
-    </div>
-
-    <div class="info-panel rewards-panel">
-      <div class="rewards-heading-row">
-        <div>
-          <h2>Flexible Reward Options</h2>
-          <p>Each month, Division winners can choose from a variety of rewards, including:</p>
-        </div>
-        <div class="rewards-wordmark">Rewards</div>
-      </div>
-
-      <ul class="rewards-list">
-        <li>3 floating holidays</li>
-        <li>Zenova Spa experience, up to a $500 value</li>
-        <li>Dining certificate to a signature restaurant, up to a $500 value</li>
-        <li>Cash prize, $500</li>
-        <li>Premium electronics, up to a $500 value</li>
-        <li>Two-night stay at a sister property</li>
-        <li>Gift card, up to a $500 value</li>
-      </ul>
-
-      <h3>End-of-Year Grand Prize</h3>
-      <p>The overall top performer for each division will receive the following:</p>
-
-      <ul class="rewards-list">
-        <li>Trip to the CoralTree Leadership Forum for professional development and networking</li>
-        <li>$1,000 cash prize</li>
-        <li>Two additional nights at the resort</li>
-      </ul>
-
-      <h3>Motivation &amp; Engagement</h3>
-      <p>This program ties rewards directly to performance, driving accountability, engagement, and continuous improvement.</p>
-    </div>
-  </div>
-</section>
