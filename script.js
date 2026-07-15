@@ -312,6 +312,105 @@ function spireHtml() {
   return `<div class="spire-card"><div class="spire-bg-one"></div><div class="spire-bg-two"></div><div class="spire-bg-three"></div><div class="spire-layout"><div class="spire-info"><div class="spire-heading-block" style="text-align:center;margin-bottom:14px;"><div class="spire-eyebrow" style="text-align:center;">The Race to</div><h2 class="spire-title" style="text-align:center;">The Spire</h2></div><div class="spire-top-box"><div class="spire-box-label">Current Top Climber</div>${championHtml}</div></div><div class="spire-tower"><div class="tower-glow"></div><div class="tower-spire"></div><div class="tower-neck"></div><div class="tower-top"></div><div class="tower-body"><div class="tower-center-column"></div><div class="tower-fade"></div></div><div class="tower-base-one"></div><div class="tower-base-two"></div>${levelLines}${climberMarkers}</div><div class="spire-legend">${legendRows}</div></div></div>`;
 }
 
+
+function getDepartmentsByGroup(group) {
+  return departments
+    .filter((department) => getDepartmentGroup(department.id) === group)
+    .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
+}
+
+function formatScore(value) {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) return "0 pts";
+  const rounded = Math.round(Number(value) * 10) / 10;
+  return `${Number.isInteger(rounded) ? rounded.toFixed(0) : rounded.toFixed(1)} pts`;
+}
+
+function averageScore(items) {
+  if (!items.length) return 0;
+  return items.reduce((sum, department) => sum + Number(department.score || 0), 0) / items.length;
+}
+
+function leadText(items) {
+  if (items.length < 2) return "No runner-up yet";
+  const lead = Number(items[0].score || 0) - Number(items[1].score || 0);
+  return `+${(Math.round(lead * 10) / 10).toFixed(1)} over #2`;
+}
+
+function insightChampionCard(group, icon) {
+  const items = getDepartmentsByGroup(group);
+  const leader = items[0];
+  const label = getDepartmentGroupLabel(group).replace(" Departments", " Champion");
+
+  if (!leader) {
+    return `
+      <div class="insight-card champion-card">
+        <div class="insight-label">${icon} ${label}</div>
+        <div class="insight-empty">No scores loaded</div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="insight-card champion-card">
+      <div class="insight-label">${icon} ${label}</div>
+      <div class="insight-main">
+        ${markerHtml(leader, true)}
+        <div>
+          <div class="insight-name">${escapeHtml(leader.name)}</div>
+          <div class="insight-sub">${formatScore(leader.score)} • ${leadText(items)}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function insightAverageCard(group) {
+  const items = getDepartmentsByGroup(group);
+  const average = averageScore(items);
+  const leader = items[0];
+
+  return `
+    <div class="insight-card average-card">
+      <div class="insight-label">${getDepartmentGroupLabel(group)}</div>
+      <div class="insight-number">${formatScore(average)}</div>
+      <div class="insight-sub">Division average${leader ? ` • Leader: ${escapeHtml(leader.name)}` : ""}</div>
+    </div>
+  `;
+}
+
+function insightClubCard() {
+  const club = [...departments]
+    .filter((department) => Number(department.score || 0) >= 100)
+    .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
+
+  const visibleMembers = club.slice(0, 6).map((department) => `
+    <span class="club-member">${markerHtml(department)} ${escapeHtml(department.name)}</span>
+  `).join("");
+
+  return `
+    <div class="insight-card club-card">
+      <div class="insight-label">100+ Club</div>
+      <div class="insight-number">${club.length}</div>
+      <div class="club-members">
+        ${club.length ? visibleMembers : `<span class="insight-sub">No departments have reached 100 yet.</span>`}
+      </div>
+    </div>
+  `;
+}
+
+function renderInsights() {
+  const insights = document.getElementById("divisionInsights");
+  if (!insights) return;
+
+  insights.innerHTML = `
+    ${insightChampionCard("forecasting", "🏆")}
+    ${insightChampionCard("nonforecasting", "🏆")}
+    ${insightAverageCard("forecasting")}
+    ${insightAverageCard("nonforecasting")}
+    ${insightClubCard()}
+  `;
+}
+
 function renderBoard() {
   const board = document.getElementById("board");
   board.innerHTML = "";
@@ -383,6 +482,7 @@ function renderRankings() {
 
 function renderAll() {
   updateStaticText();
+  renderInsights();
   renderBoard();
   renderRankings();
   updateStaticText();
