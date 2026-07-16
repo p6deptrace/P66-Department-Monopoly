@@ -1593,3 +1593,14 @@ body::after {
 .app-shell::after {
     right: 20px;
 }
+/* Clean 100+ Club icons */
+
+.spire-club-member .marker {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.spire-club-member .icon-marker {
+    outline: none !important;
+    box-shadow: none !important;
+}
