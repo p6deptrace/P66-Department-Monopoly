@@ -1546,7 +1546,7 @@ body::after {
     background-repeat: no-repeat;
     background-position: center;
     background-size: contain;
-    opacity: 0.025;
+    opacity: 0.045;
     pointer-events: none;
     z-index: 0;
 }
@@ -1571,7 +1571,7 @@ body::after {
     bottom: 60px;
     width: 90px;
     pointer-events: none;
-    opacity: 0.05;
+    opacity: 0.075;
     z-index: 0;
 
     background:
