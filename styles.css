@@ -1526,3 +1526,70 @@ h1 {
   width: 24px !important;
   height: 24px !important;
 }
+/* ===== OUTER PAGE BRANDING ===== */
+
+body {
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Large Pier 66 sunburst watermarks */
+
+body::before,
+body::after {
+    content: "";
+    position: fixed;
+    top: 50%;
+    width: 700px;
+    height: 700px;
+    background-image: url("p66-gold-circle-transparent.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    opacity: 0.025;
+    pointer-events: none;
+    z-index: 0;
+}
+
+body::before {
+    left: -350px;
+    transform: translateY(-50%) rotate(-12deg);
+}
+
+body::after {
+    right: -350px;
+    transform: translateY(-50%) rotate(12deg);
+}
+
+/* Decorative Art Deco Side Rails */
+
+.app-shell::before,
+.app-shell::after {
+    content: "";
+    position: fixed;
+    top: 120px;
+    bottom: 60px;
+    width: 90px;
+    pointer-events: none;
+    opacity: 0.05;
+    z-index: 0;
+
+    background:
+        repeating-linear-gradient(
+            to bottom,
+            transparent 0px,
+            transparent 60px,
+            rgba(215,180,106,.75) 60px,
+            rgba(215,180,106,.75) 62px,
+            transparent 62px,
+            transparent 110px
+        );
+}
+
+.app-shell::before {
+    left: 20px;
+}
+
+.app-shell::after {
+    right: 20px;
+}
