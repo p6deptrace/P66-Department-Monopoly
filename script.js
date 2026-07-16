@@ -270,8 +270,8 @@ function iconSvg(teamId) {
   return icons[baseId] ? icons[baseId]() : "";
 }
 
-function markerHtml(team, large = false) {
-  const rankClass = getRankClass(team.id);
+function markerHtml(team, large = false, suppressRank = false) {
+  const rankClass = suppressRank ? "" : getRankClass(team.id);
   const rankStyle = getRankStyle(rankClass);
   const icon = iconSvg(team.id);
   const initials = escapeHtml(getInitials(team.name));
@@ -301,7 +301,7 @@ function spireHtml() {
   const otherClimbersHtml = otherClimbers.length
     ? otherClimbers
         .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name))
-        .map((team) => `<span class="spire-club-member">${markerHtml(team)} <span>${escapeHtml(team.name)}</span></span>`)
+        .map((team) => `<span class="spire-club-member">${markerHtml(team, false, true)} <span>${escapeHtml(team.name)}</span></span>`)
         .join("")
     : `<div class="spire-club-empty">No additional 100+ departments yet.</div>`;
 
