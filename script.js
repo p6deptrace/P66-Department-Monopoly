@@ -625,7 +625,7 @@ function weeklyBreakdownHtml(department) {
     const status = hasScore ? getPerformanceStatus(numericScore) : { label: "Pending", className: "status-pending" };
     return `<div class="ranking-week-row ${hasScore ? "" : "pending"}"><div class="ranking-week-label">Week ${weekNumber}</div><div class="ranking-week-score">${hasScore ? formatScore(numericScore) : "-"}</div><span class="status-badge week-status ${status.className}">${status.label}</span></div>`;
   }).join("");
-  return `<div class="ranking-hover-card"><div class="ranking-hover-title">${escapeHtml(department.name)}</div><div class="ranking-hover-summary"><span>Total: ${formatScore(department.totalScore || 0)}</span><span>Average: ${formatScore(department.currentAverage || department.score)}</span></div><div class="ranking-week-list">${weekRows}</div></div>`;
+  return `<div class="ranking-hover-card"><div class="ranking-hover-title">${escapeHtml(department.name)}</div><div class="ranking-hover-summary"><span>Total: ${formatScore(department.totalScore || 0)}</span><span>Weekly Average: ${formatScore(department.currentAverage || department.score)}</span></div><div class="ranking-week-list">${weekRows}</div></div>`;
 }
 
 function renderSeasonBanner() {
@@ -644,7 +644,7 @@ function renderProgressOverview() {
   const bestThisWeek = getCurrentWeekLeaders()[0];
   const avgCurrent = averageScore(departments.filter((department) => department.currentAverage > 0));
 
-  card.innerHTML = `<div class="progress-header"><div><div class="progress-kicker">Monthly Race Progress</div><h2>${escapeHtml(contestContext.displayMonth)}</h2></div><div class="progress-week-pill">${weeksCompleted} of ${maxWeeks || "-"} weeks complete</div></div><div class="progress-track" aria-label="Monthly progress"><div class="progress-fill" style="width:${progressPct}%"></div></div><div class="progress-stats"><div class="progress-stat"><div class="progress-stat-label">Month Progress</div><div class="progress-stat-value">${Math.round(progressPct)}%</div></div><div class="progress-stat"><div class="progress-stat-label">Best This Week</div><div class="progress-stat-value small">${bestThisWeek ? escapeHtml(bestThisWeek.name) : "-"}</div><div class="progress-stat-sub">${bestThisWeek ? formatScore(bestThisWeek.currentWeekScore) : "No weekly score"}</div></div><div class="progress-stat"><div class="progress-stat-label">Portfolio Weekly Avg</div><div class="progress-stat-value">${formatScore(avgCurrent)}</div></div></div>`;
+  card.innerHTML = `<div class="progress-header"><div><div class="progress-kicker">Monthly Race Progress</div><h2>${escapeHtml(contestContext.displayMonth)}</h2></div><div class="progress-week-pill">${weeksCompleted} of ${maxWeeks || "-"} weeks complete</div></div><div class="progress-track" aria-label="Monthly progress"><div class="progress-fill" style="width:${progressPct}%"></div></div><div class="progress-stats"><div class="progress-stat"><div class="progress-stat-label">Month Progress</div><div class="progress-stat-value">${Math.round(progressPct)}%</div></div><div class="progress-stat"><div class="progress-stat-label">Best This Week</div><div class="progress-stat-value small">${bestThisWeek ? escapeHtml(bestThisWeek.name) : "-"}</div><div class="progress-stat-sub">${bestThisWeek ? formatScore(bestThisWeek.currentWeekScore) : "No weekly score"}</div></div><div class="progress-stat"><div class="progress-stat-label">Combined Weekly Average</div><div class="progress-stat-value">${formatScore(avgCurrent)}</div></div></div>`;
 }
 
 function renderStatusLegendPanel() {
@@ -658,7 +658,7 @@ function renderWithinReachPanel() {
   const panel = document.getElementById("withinReachPanel");
   if (!panel) return;
   const reach = getWithinReach(5);
-  const reachHtml = reach.length ? reach.map((department, index) => `<div class="reach-card-row"><div class="reach-rank">#${index + 1}</div>${markerHtml(department, false, true)}<div class="reach-name-block"><div class="reach-name">${escapeHtml(department.name)} ${statusBadgeHtml(department)}</div><div class="reach-sub">${formatScore(department.currentAverage)} weekly avg</div></div><div class="reach-gap">+${formatNumber(department.gap)} to ${department.nextLabel}</div></div>`).join("") : `<div class="reach-empty">No departments are below Excellent.</div>`;
+  const reachHtml = reach.length ? reach.map((department, index) => `<div class="reach-card-row"><div class="reach-card-top"><div class="reach-rank">#${index + 1}</div>${markerHtml(department, false, true)}<div class="reach-name-block"><div class="reach-name">${escapeHtml(department.name)} ${statusBadgeHtml(department)}</div><div class="reach-sub">${formatScore(department.currentAverage)} weekly avg</div></div></div><div class="reach-gap">+${formatNumber(department.gap)} to ${department.nextLabel}</div></div>`).join("") : `<div class="reach-empty">No departments are below Excellent.</div>`;
   panel.innerHTML = `<div class="within-reach-header"><div><div class="within-reach-kicker">Almost There</div><h2>Within Reach</h2></div><div class="within-reach-note">Closest to next status tier</div></div><div class="within-reach-list">${reachHtml}</div>`;
 }
 
@@ -698,14 +698,13 @@ function renderRankingDivision(group) {
     return `<div class="ranking-row ${index < 3 ? "top" : ""}"><div class="ranking-left"><div class="rank-badge">${rank}</div>${markerHtml(department)}<div class="ranking-name-wrap"><span class="ranking-name">${escapeHtml(department.name)}</span>${statusBadgeHtml(department)}</div></div><div class="ranking-score-stack"><span class="ranking-score">${formatScore(department.totalScore || 0)} total</span><span class="ranking-sub-score">${formatScore(department.currentAverage || department.score)} weekly avg</span></div>${weeklyBreakdownHtml(department)}</div>`;
   }).join("");
   return `<section class="ranking-division ${group}"><div class="ranking-division-header"><h3>${getDepartmentGroupLabel(group)}</h3><span>${rankedDepartments.length} departments</span></div><div class="ranking-division-grid">${rows}</div><div class="division-summary-grid">
-  <div class="division-average-card">
-    <div class="division-average-label">${getDepartmentGroupLabel(group)} Weekly Average</div>
-    <div class="division-average-score">${formatScore(averageScore(rankedDepartments))}</div>
-  </div>
-
   <div class="division-average-card total-average-card">
-    <div class="division-average-label">${getDepartmentGroupLabel(group)} Total Points Avg / Dept</div>
+    <div class="division-average-label">Total Average</div>
     <div class="division-average-score">${formatScore(totalAverageScore(rankedDepartments))}</div>
+  </div>
+  <div class="division-average-card weekly-average-card">
+    <div class="division-average-label">Week ${contestContext.latestWeekNumber || contestContext.weeksCompleted || ""} Average</div>
+    <div class="division-average-score">${formatScore(averageScore(rankedDepartments))}</div>
   </div>
 </div></section>`;
 }
