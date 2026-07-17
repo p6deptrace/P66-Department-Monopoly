@@ -2,6 +2,7 @@
 
 const imagePath = (fileName) => `Images/${fileName}`;
 const scoresPath = "scores.csv";
+const MAX_VISIBLE_TILE_TOKENS = 7;
 
 const boardSpaceData = [
   { name: "START", points: 0, type: "corner", image: "Start.png" },
@@ -286,7 +287,22 @@ function markerHtml(team, large = false, suppressRank = false) {
 function tileHtml(space, teams) {
   const cornerClass = space.type === "corner" ? "corner" : "";
   const image = space.imageUrl ? `<img class="tile-img" src="${space.imageUrl}" alt="${escapeHtml(space.name)}" loading="eager" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" /><div class="image-error" style="display:none;position:absolute;inset:38px 8px 48px 8px;align-items:center;justify-content:center;text-align:center;padding:8px;border-radius:12px;background:rgba(0,0,0,0.45);color:white;font-size:10px;font-weight:900;line-height:1.25;z-index:4;">IMAGE NOT FOUND<br>${escapeHtml(space.imageUrl)}</div>` : "";
-  return `<div class="tile ${cornerClass}">${image}<div class="tile-overlay"></div><div class="tile-ring"></div><div class="tile-points">${space.points} PTS</div><div class="tile-teams">${teams.map((team) => markerHtml(team)).join("")}</div><div class="tile-name">${escapeHtml(space.name)}</div></div>`;
+
+  const visibleTeams = teams.slice(0, MAX_VISIBLE_TILE_TOKENS);
+  const hiddenTeams = teams.slice(MAX_VISIBLE_TILE_TOKENS);
+  const hiddenCount = hiddenTeams.length;
+  const hiddenList = hiddenTeams
+    .map((team) => `<li>${escapeHtml(team.name)} <span>${formatScore(team.score)}</span></li>`)
+    .join("");
+  const hiddenTitle = hiddenTeams.map((team) => `${team.name} - ${formatScore(team.score)}`).join(" | ");
+  const overflowBadge = hiddenCount
+    ? `<div class="tile-overflow-badge" title="${escapeHtml(hiddenTitle)}">+${hiddenCount}</div>`
+    : "";
+  const overflowPopover = hiddenCount
+    ? `<div class="tile-overflow-popover"><div class="tile-overflow-title">Also on ${escapeHtml(space.name)}</div><ul>${hiddenList}</ul></div>`
+    : "";
+
+  return `<div class="tile ${cornerClass}">${image}<div class="tile-overlay"></div><div class="tile-ring"></div><div class="tile-points">${space.points} PTS</div><div class="tile-teams">${visibleTeams.map((team) => markerHtml(team)).join("")}${overflowBadge}</div>${overflowPopover}<div class="tile-name">${escapeHtml(space.name)}</div></div>`;
 }
 
 function levelBottom(score) {
