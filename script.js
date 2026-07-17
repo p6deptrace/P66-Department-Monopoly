@@ -466,15 +466,27 @@ function formatScore(value) {
   return `${Number.isInteger(rounded) ? rounded.toFixed(0) : rounded.toFixed(1)} pts`;
 }
 
+function getWeeklyAverage(department) {
+  const explicitAverage = Number(department.currentAverage || 0);
+  if (explicitAverage > 0) return explicitAverage;
+
+  const totalScore = Number(department.totalScore || 0);
+  const weeksCompleted = Number(department.weeksCompleted || 0);
+  if (totalScore > 0 && weeksCompleted > 0) return totalScore / weeksCompleted;
+
+  return 0;
+}
+
 function averageScore(items) {
-  if (!items.length) return 0;
-  return items.reduce((sum, department) => sum + Number(department.score || 0), 0) / items.length;
+  const validItems = items.filter((department) => getWeeklyAverage(department) > 0);
+  if (!validItems.length) return 0;
+  return validItems.reduce((sum, department) => sum + getWeeklyAverage(department), 0) / validItems.length;
 }
 
 function leadText(items) {
   if (items.length < 2) return "No runner-up yet";
-  const lead = Number(items[0].score || 0) - Number(items[1].score || 0);
-  return `+${(Math.round(lead * 10) / 10).toFixed(1)} over #2`;
+  const lead = getWeeklyAverage(items[0]) - getWeeklyAverage(items[1]);
+  return `+${(Math.round(lead * 10) / 10).toFixed(1)} weekly avg over #2`;
 }
 
 function insightChampionCard(group, icon) {
