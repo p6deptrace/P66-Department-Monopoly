@@ -483,6 +483,15 @@ function averageScore(items) {
   return validItems.reduce((sum, department) => sum + getWeeklyAverage(department), 0) / validItems.length;
 }
 
+function totalAverageScore(items) {
+  const validItems = items.filter((department) => Number(department.totalScore || 0) > 0);
+  if (!validItems.length) return 0;
+
+  return validItems.reduce((sum, department) => {
+    return sum + Number(department.totalScore || 0);
+  }, 0) / validItems.length;
+}
+
 function leadText(items) {
   if (items.length < 2) return "No runner-up yet";
   const lead = getWeeklyAverage(items[0]) - getWeeklyAverage(items[1]);
