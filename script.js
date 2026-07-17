@@ -2,6 +2,7 @@
 
 const imagePath = (fileName) => `Images/${fileName}`;
 const scoresPath = "scores.csv";
+const MAX_VISIBLE_TILE_TOKENS = 7;
 
 const boardSpaceData = [
   { name: "START", points: 0, type: "corner", image: "Start.png" },
@@ -110,7 +111,8 @@ const departmentBank = [
 ];
 
 let departments = departmentBank.map((department) => ({ ...department, score: 0 }));
-let contestContext = { month:null, year:null, displayMonth:"Current Competition", weeksCompleted:0, maxWeeks:0, latestWeekNumber:0 };
+let contestContext = { month: null, year: null, displayMonth: "Current Competition", weeksCompleted: 0, maxWeeks: 0, latestWeekNumber: 0 };
+let extendedScoreRows = new Map();
 
 function updateStaticText() {
   const headerRow = document.querySelector(".header-row");
@@ -154,54 +156,147 @@ async function loadScoresFromCSV() {
   try {
     const response = await fetch(`${scoresPath}?v=${Date.now()}`, { cache: "no-store" });
     if (!response.ok) return console.warn(`scores.csv could not be loaded. Status: ${response.status}`);
-    const exportData = parseScoresCSV(await response.text());
-    contestContext = exportData.context;
+    const scoreMap = parseScoresCSV(await response.text());
     departments = departmentBank.map((department) => {
-      const row = exportData.rows.get(department.id);
-      const weeksCompleted = row ? Number(row.weeksCompleted || contestContext.weeksCompleted || 0) : 0;
+      const row = extendedScoreRows.get(department.id);
       const totalScore = row ? Number(row.totalScore || 0) : 0;
-      const currentAverage = weeksCompleted > 0 ? totalScore / weeksCompleted : 0;
+      const weeksCompleted = row ? Number(row.weeksCompleted || contestContext.weeksCompleted || 0) : 0;
+      const currentAverage = weeksCompleted > 0 ? totalScore / weeksCompleted : Number(scoreMap.get(department.id) || 0);
       return {
         ...department,
-        score: row ? clampScore(Number(row.gameScore || 0)) : 0,
-        gameScore: row ? Number(row.gameScore || 0) : 0,
+        score: scoreMap.has(department.id) ? clampScore(Number(scoreMap.get(department.id))) : 0,
+        gameScore: scoreMap.has(department.id) ? Number(scoreMap.get(department.id)) : 0,
         totalScore,
         weeksCompleted,
         maxWeeks: row ? Number(row.maxWeeks || contestContext.maxWeeks || 0) : contestContext.maxWeeks,
         yearlyScore: row ? Number(row.yearlyScore || 0) : 0,
-        weekScores: row ? row.weekScores : [0,0,0,0,0],
+        weekScores: row ? row.weekScores : [0, 0, 0, 0, 0],
         currentWeekScore: row ? getWeekScore(row.weekScores, contestContext.latestWeekNumber) : 0,
         previousWeekScore: row ? getWeekScore(row.weekScores, contestContext.latestWeekNumber - 1) : 0,
         currentAverage,
         status: getPerformanceStatus(currentAverage),
       };
     });
-  } catch (error) { console.warn("Could not load scores.csv. Falling back to zero scores.", error); }
-}
-function parseScoresCSV(csvText) {
-  const rows = new Map();
-  const lines = csvText.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
-  if (!lines.length) return { rows, context: contestContext };
-  const headers = splitCSVLine(lines[0]).map(normalizeHeader);
-  let month=null, year=null, weeksCompleted=0, maxWeeks=0, latestWeekNumber=0;
-  for (const line of lines.slice(1)) {
-    const cells = splitCSVLine(line); const raw = {};
-    headers.forEach((h,i)=> raw[h] = cells[i] !== undefined ? cells[i].trim() : "");
-    const id = raw.departmentid; if (!id) continue;
-    const weekScores = [1,2,3,4,5].map((w)=> Number(raw[`week${w}`] || 0));
-    weekScores.forEach((score, index) => { if (score > 0) latestWeekNumber = Math.max(latestWeekNumber, index + 1); });
-    const row = { id, gameScore:Number(raw.gamescore || raw.score || 0), totalScore:Number(raw.totalscore || 0), month:Number(raw.month || 0), year:Number(raw.year || 0), weeksCompleted:Number(raw.weekscompleted || 0), maxWeeks:Number(raw.maxweeks || 0), yearlyScore:Number(raw.yearlyscore || 0), weekScores };
-    rows.set(id,row); if(!month && row.month) month=row.month; if(!year && row.year) year=row.year; weeksCompleted=Math.max(weeksCompleted,row.weeksCompleted||0); maxWeeks=Math.max(maxWeeks,row.maxWeeks||0);
+  } catch (error) {
+    console.warn("Could not load scores.csv. Falling back to zero scores.", error);
   }
-  if (!latestWeekNumber) latestWeekNumber = weeksCompleted;
-  return { rows, context:{ month, year, displayMonth:formatMonthYear(month, year), weeksCompleted, maxWeeks, latestWeekNumber } };
 }
-function splitCSVLine(line) { const result=[]; let current=""; let inQuotes=false; for(let i=0;i<line.length;i++){ const ch=line[i]; if(ch==='"'){ if(inQuotes && line[i+1]==='"'){ current+='"'; i++; } else inQuotes=!inQuotes; } else if(ch===',' && !inQuotes){ result.push(current); current=""; } else current+=ch; } result.push(current); return result; }
-function normalizeHeader(value){ return String(value||"").toLowerCase().replace(/[^a-z0-9]/g,""); }
-function getWeekScore(weekScores, weekNumber){ if(!weekNumber || weekNumber<1) return 0; return Number(weekScores[weekNumber-1] || 0); }
-function formatMonthYear(month, year){ if(!month || !year) return "Current Competition"; const monthName = new Date(Number(year), Number(month)-1, 1).toLocaleString("en-US", { month:"long" }); return `${monthName} ${year}`; }
-function getPerformanceStatus(avg){ const v=Number(avg||0); if(v>=90) return {label:"Excellent",className:"status-excellent"}; if(v>=80) return {label:"Strong",className:"status-strong"}; if(v>=70) return {label:"Good",className:"status-good"}; return {label:"Needs Support",className:"status-support"}; }
-function statusBadgeHtml(department){ const s=department.status || getPerformanceStatus(department.currentAverage); return `<span class="status-badge ${s.className}">${s.label}</span>`; }
+
+function parseScoresCSV(csvText) {
+  const scoreMap = new Map();
+  extendedScoreRows = new Map();
+  contestContext = { month: null, year: null, displayMonth: "Current Competition", weeksCompleted: 0, maxWeeks: 0, latestWeekNumber: 0 };
+
+  const lines = csvText.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  if (!lines.length) return scoreMap;
+
+  const headers = splitCSVLine(lines[0]).map(normalizeHeader);
+  const hasNamedHeaders = headers.includes("departmentid");
+
+  for (const line of lines.slice(hasNamedHeaders ? 1 : 0)) {
+    const cells = splitCSVLine(line);
+    if (!cells.length) continue;
+
+    if (!hasNamedHeaders) {
+      const id = cells[0] ? cells[0].trim() : "";
+      const score = cells[1] ? cells[1].trim() : "";
+      if (!id || id.toLowerCase() === "id" || Number.isNaN(Number(score))) continue;
+      scoreMap.set(id, Number(score));
+      continue;
+    }
+
+    const raw = {};
+    headers.forEach((header, index) => {
+      raw[header] = cells[index] !== undefined ? cells[index].trim() : "";
+    });
+
+    const id = raw.departmentid;
+    if (!id) continue;
+
+    const gameScore = Number(raw.gamescore || raw.score || 0);
+    if (!Number.isNaN(gameScore)) scoreMap.set(id, gameScore);
+
+    const weekScores = [1, 2, 3, 4, 5].map((week) => Number(raw[`week${week}`] || 0));
+    weekScores.forEach((score, index) => {
+      if (score > 0) contestContext.latestWeekNumber = Math.max(contestContext.latestWeekNumber, index + 1);
+    });
+
+    const row = {
+      id,
+      gameScore,
+      totalScore: Number(raw.totalscore || 0),
+      month: Number(raw.month || 0),
+      year: Number(raw.year || 0),
+      weeksCompleted: Number(raw.weekscompleted || 0),
+      maxWeeks: Number(raw.maxweeks || 0),
+      yearlyScore: Number(raw.yearlyscore || 0),
+      weekScores,
+    };
+
+    extendedScoreRows.set(id, row);
+    if (!contestContext.month && row.month) contestContext.month = row.month;
+    if (!contestContext.year && row.year) contestContext.year = row.year;
+    contestContext.weeksCompleted = Math.max(contestContext.weeksCompleted, row.weeksCompleted || 0);
+    contestContext.maxWeeks = Math.max(contestContext.maxWeeks, row.maxWeeks || 0);
+  }
+
+  if (!contestContext.latestWeekNumber) contestContext.latestWeekNumber = contestContext.weeksCompleted;
+  contestContext.displayMonth = formatMonthYear(contestContext.month, contestContext.year);
+  return scoreMap;
+}
+
+function splitCSVLine(line) {
+  const result = [];
+  let current = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === "," && !inQuotes) {
+      result.push(current);
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+  result.push(current);
+  return result;
+}
+
+function normalizeHeader(value) {
+  return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function getWeekScore(weekScores, weekNumber) {
+  if (!weekNumber || weekNumber < 1) return 0;
+  return Number(weekScores[weekNumber - 1] || 0);
+}
+
+function formatMonthYear(month, year) {
+  if (!month || !year) return "Current Competition";
+  const monthName = new Date(Number(year), Number(month) - 1, 1).toLocaleString("en-US", { month: "long" });
+  return `${monthName} ${year}`;
+}
+
+function getPerformanceStatus(avg) {
+  const value = Number(avg || 0);
+  if (value >= 90) return { label: "Excellent", className: "status-excellent" };
+  if (value >= 80) return { label: "Strong", className: "status-strong" };
+  if (value >= 70) return { label: "Good", className: "status-good" };
+  return { label: "Needs Support", className: "status-support" };
+}
+
+function statusBadgeHtml(department) {
+  const status = department.status || getPerformanceStatus(department.currentAverage);
+  return `<span class="status-badge ${status.className}">${status.label}</span>`;
+}
+
 function getGridPosition(index) {
   if (index >= 0 && index <= 5) return { row: 1, col: index + 1 };
   if (index >= 6 && index <= 10) return { row: index - 4, col: 6 };
@@ -239,7 +334,7 @@ function getRankClass(teamId) {
   const group = getDepartmentGroup(teamId);
   const rankedDepartments = [...departments]
     .filter((department) => getDepartmentGroup(department.id) === group)
-    .sort((a, b) => b.currentAverage - a.currentAverage || b.totalScore - a.totalScore || a.name.localeCompare(b.name));
+    .sort((a, b) => (b.currentAverage || b.score) - (a.currentAverage || a.score) || b.totalScore - a.totalScore || a.name.localeCompare(b.name));
 
   const rankIndex = rankedDepartments.findIndex((department) => department.id === teamId);
   if (rankIndex === 0) return "rank-gold";
@@ -303,23 +398,29 @@ function markerHtml(team, large = false, suppressRank = false) {
   const icon = iconSvg(team.id);
   const initials = escapeHtml(getInitials(team.name));
   const sizeStyle = icon ? (large ? "width:46px;height:46px;font-size:0;" : "width:38px;height:38px;font-size:0;") : "";
-  const status = team.status || getPerformanceStatus(team.currentAverage);
-  const title = `${team.name} | ${status.label} | Avg: ${formatScore(team.currentAverage)} | Total: ${formatScore(team.totalScore)} | Board Progress: ${formatScore(team.gameScore || team.score)} | Weeks: ${team.weeksCompleted || 0}/${team.maxWeeks || contestContext.maxWeeks || 0}`;
-  if (icon) return `<div class="marker icon-marker ${large ? "large" : ""} ${team.color} ${rankClass} ${status.className}" style="${sizeStyle}${rankStyle}" title="${escapeHtml(title)}">${icon}</div>`;
+  const status = team.status || getPerformanceStatus(team.currentAverage || team.score);
+  const title = `${team.name} | ${status.label} | Avg: ${formatScore(team.currentAverage || team.score)} | Total: ${formatScore(team.totalScore || 0)} | Board Progress: ${formatScore(team.gameScore || team.score)} | Weeks: ${team.weeksCompleted || 0}/${team.maxWeeks || contestContext.maxWeeks || 0}`;
+  if (icon) {
+    return `<div class="marker icon-marker ${large ? "large" : ""} ${team.color} ${rankClass} ${status.className}" style="${sizeStyle}${rankStyle}" title="${escapeHtml(title)}">${icon}</div>`;
+  }
   return `<div class="marker ${large ? "large" : ""} ${team.color} ${rankClass} ${status.className}" style="${rankStyle}" title="${escapeHtml(title)}">${initials}</div>`;
 }
+
 function tileHtml(space, teams) {
   const cornerClass = space.type === "corner" ? "corner" : "";
   const image = space.imageUrl ? `<img class="tile-img" src="${space.imageUrl}" alt="${escapeHtml(space.name)}" loading="eager" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" /><div class="image-error" style="display:none;position:absolute;inset:12px 8px 48px 8px;align-items:center;justify-content:center;text-align:center;padding:8px;border-radius:12px;background:rgba(0,0,0,0.45);color:white;font-size:10px;font-weight:900;line-height:1.25;z-index:4;">IMAGE NOT FOUND<br>${escapeHtml(space.imageUrl)}</div>` : "";
   const visibleTeams = teams.slice(0, MAX_VISIBLE_TILE_TOKENS);
   const hiddenTeams = teams.slice(MAX_VISIBLE_TILE_TOKENS);
   const hiddenCount = hiddenTeams.length;
-  const hiddenList = hiddenTeams.map((team) => `<li><span class="tile-hidden-name">${escapeHtml(team.name)}</span><span class="tile-hidden-status">${team.status.label} • ${formatScore(team.currentAverage)}</span></li>`).join("");
-  const hiddenTitle = hiddenTeams.map((team) => `${team.name} - ${team.status.label} - Avg ${formatScore(team.currentAverage)}`).join(" | ");
+  const hiddenList = hiddenTeams
+    .map((team) => `<li><span class="tile-hidden-name">${escapeHtml(team.name)}</span><span class="tile-hidden-status">${team.status.label} • ${formatScore(team.currentAverage || team.score)}</span></li>`)
+    .join("");
+  const hiddenTitle = hiddenTeams.map((team) => `${team.name} - ${team.status.label}`).join(" | ");
   const overflowBadge = hiddenCount ? `<div class="tile-overflow-badge" title="${escapeHtml(hiddenTitle)}">+${hiddenCount}</div>` : "";
   const overflowPopover = hiddenCount ? `<div class="tile-overflow-popover"><div class="tile-overflow-title">Also on ${escapeHtml(space.name)}</div><ul>${hiddenList}</ul></div>` : "";
   return `<div class="tile ${cornerClass}">${image}<div class="tile-overlay"></div><div class="tile-ring"></div><div class="tile-teams">${visibleTeams.map((team) => markerHtml(team)).join("")}${overflowBadge}</div>${overflowPopover}<div class="tile-name">${escapeHtml(space.name)}</div></div>`;
 }
+
 function levelBottom(score) {
   const pct = Math.min(1, Math.max(0, (score - 100) / 10));
   return 48 + pct * 424;
@@ -343,7 +444,7 @@ function spireHtml() {
     const sideOffset = index % 2 === 0 ? 214 : 52;
     return `<div class="spire-marker-wrap" style="bottom:${bottom}px; left:${sideOffset}px">${markerHtml(team, true)}</div>`;
   }).join("");
-  const championHtml = champion ? `<div class="spire-champion">${markerHtml(champion)}<div><div class="champion-name">${escapeHtml(champion.name)}</div><div class="champion-score">${formatScore(champion.currentAverage)} avg • ${formatScore(champion.gameScore || champion.score)} progress</div></div></div>` : `<div class="champion-score" style="margin-top:8px">No department has reached the Spire yet.</div>`;
+  const championHtml = champion ? `<div class="spire-champion">${markerHtml(champion)}<div><div class="champion-name">${escapeHtml(champion.name)}</div><div class="champion-score">${formatScore(champion.currentAverage || champion.score)} avg • ${formatScore(champion.gameScore || champion.score)} progress</div></div></div>` : `<div class="champion-score" style="margin-top:8px">No department has reached the Spire yet.</div>`;
   const legendRows = spireLevels.map((level) => {
     const teamsAtLevel = climbers.filter((team) => getDisplayedSpireLevel(team.score) === level);
     return `<div class="spire-legend-row"><div class="legend-level ${level === 110 ? "crown" : ""}">${level}</div><div class="legend-label">${level === 110 ? "Crown" : level === 100 ? "Entry" : "Climb"}</div><div class="legend-markers">${teamsAtLevel.map((team) => markerHtml(team)).join("")}</div></div>`;
@@ -356,7 +457,7 @@ function spireHtml() {
 function getDepartmentsByGroup(group) {
   return departments
     .filter((department) => getDepartmentGroup(department.id) === group)
-    .sort((a, b) => b.currentAverage - a.currentAverage || b.totalScore - a.totalScore || a.name.localeCompare(b.name));
+    .sort((a, b) => (b.currentAverage || b.score) - (a.currentAverage || a.score) || b.totalScore - a.totalScore || a.name.localeCompare(b.name));
 }
 
 function formatScore(value) {
@@ -365,15 +466,14 @@ function formatScore(value) {
   return `${Number.isInteger(rounded) ? rounded.toFixed(0) : rounded.toFixed(1)} pts`;
 }
 
-function formatNumber(value){ if(value===null || value===undefined || Number.isNaN(Number(value))) return "0"; const rounded=Math.round(Number(value)*10)/10; return Number.isInteger(rounded)?rounded.toFixed(0):rounded.toFixed(1); }
 function averageScore(items) {
   if (!items.length) return 0;
-  return items.reduce((sum, department) => sum + Number(department.currentAverage || 0), 0) / items.length;
+  return items.reduce((sum, department) => sum + Number(department.score || 0), 0) / items.length;
 }
 
 function leadText(items) {
   if (items.length < 2) return "No runner-up yet";
-  const lead = Number(items[0].currentAverage || 0) - Number(items[1].currentAverage || 0);
+  const lead = Number(items[0].score || 0) - Number(items[1].score || 0);
   return `+${(Math.round(lead * 10) / 10).toFixed(1)} over #2`;
 }
 
@@ -398,7 +498,7 @@ function insightChampionCard(group, icon) {
         ${markerHtml(leader, true)}
         <div>
           <div class="insight-name">${escapeHtml(leader.name)}</div>
-          <div class="insight-sub">${formatScore(leader.currentAverage)} avg • ${leadText(items)}</div>
+          <div class="insight-sub">${formatScore(leader.score)} • ${leadText(items)}</div>
         </div>
       </div>
     </div>
@@ -422,7 +522,7 @@ function insightAverageCard(group) {
 function insightClubCard() {
   const club = [...departments]
     .filter((department) => Number(department.score || 0) >= 100)
-    .sort((a, b) => b.currentAverage - a.currentAverage || b.totalScore - a.totalScore || a.name.localeCompare(b.name));
+    .sort((a, b) => (b.currentAverage || b.score) - (a.currentAverage || a.score) || b.totalScore - a.totalScore || a.name.localeCompare(b.name));
 
   const visibleMembers = club.slice(0, 6).map((department) => `
     <span class="club-member">${markerHtml(department)} ${escapeHtml(department.name)}</span>
@@ -449,14 +549,93 @@ function renderInsights() {
   `;
 }
 
-function getCurrentWeekLeaders(){ return [...departments].filter((d)=>Number(d.currentWeekScore||0)>0).sort((a,b)=>b.currentWeekScore-a.currentWeekScore || a.name.localeCompare(b.name)); }
-function getTopImprovers(limit=3){ return [...departments].map((d)=>({...d,movement:Number(d.currentWeekScore||0)-Number(d.previousWeekScore||0)})).filter((d)=>d.previousWeekScore>0 && d.currentWeekScore>0).sort((a,b)=>b.movement-a.movement || b.currentWeekScore-a.currentWeekScore || a.name.localeCompare(b.name)).slice(0,limit); }
-function getStatusCounts(){ const counts={Excellent:0,Strong:0,Good:0,"Needs Support":0}; departments.forEach((d)=>{ const label=(d.status||getPerformanceStatus(d.currentAverage)).label; counts[label]=(counts[label]||0)+1; }); return counts; }
-function getWithinReach(limit=3){ const thresholds=[{label:"Good",value:70},{label:"Strong",value:80},{label:"Excellent",value:90}]; return [...departments].map((d)=>{ const avg=Number(d.currentAverage||0); const next=thresholds.find((t)=>avg<t.value); return next ? {...d,nextLabel:next.label, gap:next.value-avg} : null; }).filter(Boolean).sort((a,b)=>a.gap-b.gap || b.currentAverage-a.currentAverage).slice(0,limit); }
-function weeklyBreakdownHtml(department){ const maxWeeks=Number(department.maxWeeks||contestContext.maxWeeks||5); const weekRows=department.weekScores.slice(0,maxWeeks).map((score,index)=>{ const weekNumber=index+1; const numericScore=Number(score||0); const hasScore=numericScore>0; const status=hasScore?getPerformanceStatus(numericScore):{label:"Pending",className:"status-pending"}; return `<div class="ranking-week-row ${hasScore?"":"pending"}"><div class="ranking-week-label">Week ${weekNumber}</div><div class="ranking-week-score">${hasScore?formatScore(numericScore):"-"}</div><span class="status-badge week-status ${status.className}">${status.label}</span></div>`; }).join(""); return `<div class="ranking-hover-card"><div class="ranking-hover-title">${escapeHtml(department.name)}</div><div class="ranking-hover-summary"><span>Total: ${formatScore(department.totalScore)}</span><span>Average: ${formatScore(department.currentAverage)}</span></div><div class="ranking-week-list">${weekRows}</div></div>`; }
-function renderSeasonBanner(){ const banner=document.getElementById("seasonBanner"); if(!banner) return; const weekText=contestContext.maxWeeks?`Week ${contestContext.weeksCompleted||contestContext.latestWeekNumber||0} of ${contestContext.maxWeeks}`:"Current standings"; banner.innerHTML=`<div class="season-banner-left"><div class="season-kicker">Current Competition</div><div class="season-title">${escapeHtml(contestContext.displayMonth)}</div></div><div class="season-banner-right">${escapeHtml(weekText)}</div>`; }
-function renderProgressOverview(){ const card=document.getElementById("progressOverview"); if(!card) return; const maxWeeks=Number(contestContext.maxWeeks||0); const weeksCompleted=Number(contestContext.weeksCompleted||contestContext.latestWeekNumber||0); const progressPct=maxWeeks?Math.min(100,Math.max(0,(weeksCompleted/maxWeeks)*100)):0; const bestThisWeek=getCurrentWeekLeaders()[0]; const avgCurrent=averageScore(departments.filter((d)=>d.currentAverage>0)); const c=getStatusCounts(); const reach=getWithinReach(3); const reachHtml=reach.length?reach.map((d)=>`<div class="reach-item"><div><strong>${escapeHtml(d.name)}</strong><span>${formatScore(d.currentAverage)} avg</span></div><b>+${formatNumber(d.gap)} to ${d.nextLabel}</b></div>`).join(""):`<div class="reach-empty">No departments are below Excellent.</div>`; card.innerHTML=`<div class="progress-header"><div><div class="progress-kicker">Monthly Race Progress</div><h2>${escapeHtml(contestContext.displayMonth)}</h2></div><div class="progress-week-pill">${weeksCompleted} of ${maxWeeks||"-"} weeks complete</div></div><div class="progress-track"><div class="progress-fill" style="width:${progressPct}%"></div></div><div class="progress-stats"><div class="progress-stat"><div class="progress-stat-label">Month Progress</div><div class="progress-stat-value">${Math.round(progressPct)}%</div></div><div class="progress-stat"><div class="progress-stat-label">Best This Week</div><div class="progress-stat-value small">${bestThisWeek?escapeHtml(bestThisWeek.name):"-"}</div><div class="progress-stat-sub">${bestThisWeek?formatScore(bestThisWeek.currentWeekScore):"No weekly score"}</div></div><div class="progress-stat"><div class="progress-stat-label">Portfolio Avg</div><div class="progress-stat-value">${formatScore(avgCurrent)}</div></div></div><div class="score-extras-grid"><div class="score-extra-card"><div class="score-extra-title">Status Counts</div><div class="status-count-row"><span class="status-badge status-excellent">Excellent ${c.Excellent||0}</span><span class="status-badge status-strong">Strong ${c.Strong||0}</span><span class="status-badge status-good">Good ${c.Good||0}</span><span class="status-badge status-support">Needs Support ${c["Needs Support"]||0}</span></div></div><div class="score-extra-card"><div class="score-extra-title">Scoring Legend</div><div class="legend-pill-row"><span>90+ Excellent</span><span>80-89 Strong</span><span>70-79 Good</span><span>&lt;70 Needs Support</span></div></div><div class="score-extra-card within-reach-card"><div class="score-extra-title">Within Reach</div>${reachHtml}</div></div>`; }
-function renderMoversInsights(){ const card=document.getElementById("moversInsights"); if(!card) return; const movers=getTopImprovers(3); const rows=movers.length?movers.map((d,i)=>`<div class="mover-row"><div class="mover-rank">#${i+1}</div>${markerHtml(d,false,true)}<div class="mover-name-block"><div class="mover-name">${escapeHtml(d.name)} ${statusBadgeHtml(d)}</div><div class="mover-sub">Week ${contestContext.latestWeekNumber-1}: ${formatScore(d.previousWeekScore)} → Week ${contestContext.latestWeekNumber}: ${formatScore(d.currentWeekScore)}</div></div><div class="mover-delta">+${formatNumber(d.movement)}</div></div>`).join(""):`<div class="movers-empty">Not enough week-over-week data yet.</div>`; card.innerHTML=`<div class="movers-header"><div><div class="movers-kicker">Momentum Watch</div><h2>Biggest Improvements This Week</h2></div><div class="movers-note">Compared to prior week</div></div><div class="movers-grid">${rows}</div>`; }
+function formatNumber(value) {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) return "0";
+  const rounded = Math.round(Number(value) * 10) / 10;
+  return Number.isInteger(rounded) ? rounded.toFixed(0) : rounded.toFixed(1);
+}
+
+function getCurrentWeekLeaders() {
+  return [...departments]
+    .filter((department) => Number(department.currentWeekScore || 0) > 0)
+    .sort((a, b) => b.currentWeekScore - a.currentWeekScore || a.name.localeCompare(b.name));
+}
+
+function getTopImprovers(limit = 3) {
+  return [...departments]
+    .map((department) => ({ ...department, movement: Number(department.currentWeekScore || 0) - Number(department.previousWeekScore || 0) }))
+    .filter((department) => department.previousWeekScore > 0 && department.currentWeekScore > 0)
+    .sort((a, b) => b.movement - a.movement || b.currentWeekScore - a.currentWeekScore || a.name.localeCompare(b.name))
+    .slice(0, limit);
+}
+
+function getStatusCounts() {
+  const counts = { Excellent: 0, Strong: 0, Good: 0, "Needs Support": 0 };
+  departments.forEach((department) => {
+    const label = (department.status || getPerformanceStatus(department.currentAverage || department.score)).label;
+    counts[label] = (counts[label] || 0) + 1;
+  });
+  return counts;
+}
+
+function getWithinReach(limit = 3) {
+  const thresholds = [
+    { label: "Good", value: 70 },
+    { label: "Strong", value: 80 },
+    { label: "Excellent", value: 90 },
+  ];
+  return [...departments]
+    .map((department) => {
+      const avg = Number(department.currentAverage || 0);
+      const next = thresholds.find((threshold) => avg < threshold.value);
+      return next ? { ...department, nextLabel: next.label, gap: next.value - avg } : null;
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.gap - b.gap || b.currentAverage - a.currentAverage)
+    .slice(0, limit);
+}
+
+function weeklyBreakdownHtml(department) {
+  const maxWeeks = Number(department.maxWeeks || contestContext.maxWeeks || 5);
+  const weekRows = department.weekScores.slice(0, maxWeeks).map((score, index) => {
+    const weekNumber = index + 1;
+    const numericScore = Number(score || 0);
+    const hasScore = numericScore > 0;
+    const status = hasScore ? getPerformanceStatus(numericScore) : { label: "Pending", className: "status-pending" };
+    return `<div class="ranking-week-row ${hasScore ? "" : "pending"}"><div class="ranking-week-label">Week ${weekNumber}</div><div class="ranking-week-score">${hasScore ? formatScore(numericScore) : "-"}</div><span class="status-badge week-status ${status.className}">${status.label}</span></div>`;
+  }).join("");
+  return `<div class="ranking-hover-card"><div class="ranking-hover-title">${escapeHtml(department.name)}</div><div class="ranking-hover-summary"><span>Total: ${formatScore(department.totalScore || 0)}</span><span>Average: ${formatScore(department.currentAverage || department.score)}</span></div><div class="ranking-week-list">${weekRows}</div></div>`;
+}
+
+function renderSeasonBanner() {
+  const banner = document.getElementById("seasonBanner");
+  if (!banner) return;
+  const weekText = contestContext.maxWeeks ? `Week ${contestContext.weeksCompleted || contestContext.latestWeekNumber || 0} of ${contestContext.maxWeeks}` : "Current standings";
+  banner.innerHTML = `<div class="season-banner-left"><div class="season-kicker">Current Competition</div><div class="season-title">${escapeHtml(contestContext.displayMonth)}</div></div><div class="season-banner-right">${escapeHtml(weekText)}</div>`;
+}
+
+function renderProgressOverview() {
+  const card = document.getElementById("progressOverview");
+  if (!card) return;
+  const maxWeeks = Number(contestContext.maxWeeks || 0);
+  const weeksCompleted = Number(contestContext.weeksCompleted || contestContext.latestWeekNumber || 0);
+  const progressPct = maxWeeks ? Math.min(100, Math.max(0, (weeksCompleted / maxWeeks) * 100)) : 0;
+  const bestThisWeek = getCurrentWeekLeaders()[0];
+  const avgCurrent = averageScore(departments.filter((department) => Number(department.currentAverage || 0) > 0));
+  const counts = getStatusCounts();
+  const reach = getWithinReach(3);
+  const reachHtml = reach.length ? reach.map((department) => `<div class="reach-item"><div><strong>${escapeHtml(department.name)}</strong><span>${formatScore(department.currentAverage)} avg</span></div><b>+${formatNumber(department.gap)} to ${department.nextLabel}</b></div>`).join("") : `<div class="reach-empty">No departments are below Excellent.</div>`;
+  card.innerHTML = `<div class="progress-header"><div><div class="progress-kicker">Monthly Race Progress</div><h2>${escapeHtml(contestContext.displayMonth)}</h2></div><div class="progress-week-pill">${weeksCompleted} of ${maxWeeks || "-"} weeks complete</div></div><div class="progress-track"><div class="progress-fill" style="width:${progressPct}%"></div></div><div class="progress-stats"><div class="progress-stat"><div class="progress-stat-label">Month Progress</div><div class="progress-stat-value">${Math.round(progressPct)}%</div></div><div class="progress-stat"><div class="progress-stat-label">Best This Week</div><div class="progress-stat-value small">${bestThisWeek ? escapeHtml(bestThisWeek.name) : "-"}</div><div class="progress-stat-sub">${bestThisWeek ? formatScore(bestThisWeek.currentWeekScore) : "No weekly score"}</div></div><div class="progress-stat"><div class="progress-stat-label">Portfolio Avg</div><div class="progress-stat-value">${formatScore(avgCurrent)}</div></div></div><div class="score-extras-grid"><div class="score-extra-card"><div class="score-extra-title">Status Counts</div><div class="status-count-row"><span class="status-badge status-excellent">Excellent ${counts.Excellent || 0}</span><span class="status-badge status-strong">Strong ${counts.Strong || 0}</span><span class="status-badge status-good">Good ${counts.Good || 0}</span><span class="status-badge status-support">Needs Support ${counts["Needs Support"] || 0}</span></div></div><div class="score-extra-card"><div class="score-extra-title">Scoring Legend</div><div class="legend-pill-row"><span>90+ Excellent</span><span>80-89 Strong</span><span>70-79 Good</span><span>&lt;70 Needs Support</span></div></div><div class="score-extra-card within-reach-card"><div class="score-extra-title">Within Reach</div>${reachHtml}</div></div>`;
+}
+
+function renderMoversInsights() {
+  const card = document.getElementById("moversInsights");
+  if (!card) return;
+  const movers = getTopImprovers(3);
+  const rows = movers.length ? movers.map((department, index) => `<div class="mover-row"><div class="mover-rank">#${index + 1}</div>${markerHtml(department, false, true)}<div class="mover-name-block"><div class="mover-name">${escapeHtml(department.name)} ${statusBadgeHtml(department)}</div><div class="mover-sub">Week ${contestContext.latestWeekNumber - 1}: ${formatScore(department.previousWeekScore)} → Week ${contestContext.latestWeekNumber}: ${formatScore(department.currentWeekScore)}</div></div><div class="mover-delta">+${formatNumber(department.movement)}</div></div>`).join("") : `<div class="movers-empty">Not enough week-over-week data yet.</div>`;
+  card.innerHTML = `<div class="movers-header"><div><div class="movers-kicker">Momentum Watch</div><h2>Biggest Improvements This Week</h2></div><div class="movers-note">Compared to prior week</div></div><div class="movers-grid">${rows}</div>`;
+}
+
 function renderBoard() {
   const board = document.getElementById("board");
   board.innerHTML = "";
@@ -477,10 +656,16 @@ function renderBoard() {
 }
 
 function renderRankingDivision(group) {
-  const rankedDepartments = [...departments].filter((d)=>getDepartmentGroup(d.id)===group).sort((a,b)=>b.currentAverage-a.currentAverage || b.totalScore-a.totalScore || a.name.localeCompare(b.name));
-  const rows = rankedDepartments.map((department,index)=>{ const rank=index===0?"🥇":index===1?"🥈":index===2?"🥉":`#${index+1}`; return `<div class="ranking-row ${index<3?"top":""}"><div class="ranking-left"><div class="rank-badge">${rank}</div>${markerHtml(department)}<div class="ranking-name-wrap"><span class="ranking-name">${escapeHtml(department.name)}</span>${statusBadgeHtml(department)}</div></div><div class="ranking-score-stack"><span class="ranking-score">${formatScore(department.totalScore)} total</span><span class="ranking-sub-score">${formatScore(department.currentAverage)} avg</span></div>${weeklyBreakdownHtml(department)}</div>`; }).join("");
+  const rankedDepartments = [...departments]
+    .filter((department) => getDepartmentGroup(department.id) === group)
+    .sort((a, b) => (b.currentAverage || b.score) - (a.currentAverage || a.score) || b.totalScore - a.totalScore || a.name.localeCompare(b.name));
+  const rows = rankedDepartments.map((department, index) => {
+    const rank = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`;
+    return `<div class="ranking-row ${index < 3 ? "top" : ""}"><div class="ranking-left"><div class="rank-badge">${rank}</div>${markerHtml(department)}<div class="ranking-name-wrap"><span class="ranking-name">${escapeHtml(department.name)}</span>${statusBadgeHtml(department)}</div></div><div class="ranking-score-stack"><span class="ranking-score">${formatScore(department.totalScore || 0)} total</span><span class="ranking-sub-score">${formatScore(department.currentAverage || department.score)} avg</span></div>${weeklyBreakdownHtml(department)}</div>`;
+  }).join("");
   return `<section class="ranking-division ${group}"><div class="ranking-division-header"><h3>${getDepartmentGroupLabel(group)}</h3><span>${rankedDepartments.length} departments</span></div><div class="ranking-division-grid">${rows}</div><div class="division-average-card"><div class="division-average-label">${getDepartmentGroupLabel(group)} Average</div><div class="division-average-score">${formatScore(averageScore(rankedDepartments))}</div></div></section>`;
 }
+
 function renderRankings() {
   const rankings = document.getElementById("rankings");
   const departmentCount = document.getElementById("departmentCount");
@@ -498,12 +683,12 @@ function renderRankings() {
 
 function renderAll() {
   updateStaticText();
-  renderSeasonBanner();
+  try { renderSeasonBanner(); } catch (error) { console.warn("Season banner failed", error); }
   renderBoard();
-  renderProgressOverview();
-  renderInsights();
+  try { renderProgressOverview(); } catch (error) { console.warn("Progress overview failed", error); }
+  try { renderInsights(); } catch (error) { console.warn("Insights failed", error); }
   renderRankings();
-  renderMoversInsights();
+  try { renderMoversInsights(); } catch (error) { console.warn("Movers failed", error); }
   updateStaticText();
 }
 
