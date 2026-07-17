@@ -2,6 +2,7 @@
 
 const imagePath = (fileName) => `Images/${fileName}`;
 const scoresPath = "scores.csv";
+const MAX_VISIBLE_TILE_TOKENS = 7;
 
 const boardSpaceData = [
   { name: "START", points: 0, type: "corner", image: "Start.png" },
@@ -110,7 +111,14 @@ const departmentBank = [
 ];
 
 let departments = departmentBank.map((department) => ({ ...department, score: 0 }));
-let contestContext = { month: null, year: null, displayMonth: "Current Competition", weeksCompleted: 0, maxWeeks: 0, latestWeekNumber: 0 };
+let contestContext = {
+  month: null,
+  year: null,
+  displayMonth: "Current Competition",
+  weeksCompleted: 0,
+  maxWeeks: 0,
+  latestWeekNumber: 0,
+};
 
 function updateStaticText() {
   const headerRow = document.querySelector(".header-row");
@@ -184,19 +192,28 @@ async function loadScoresFromCSV() {
 }
 
 function parseScoresCSV(csvText) {
-  const lines = csvText.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
-  if (!lines.length) return { rows: new Map(), context: contestContext };
-  const headers = splitCSVLine(lines[0]).map(normalizeHeader);
   const rows = new Map();
-  let contextMonth = null, contextYear = null, contextWeeksCompleted = 0, contextMaxWeeks = 0, latestWeekNumber = 0;
+  const lines = csvText.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  if (!lines.length) return { rows, context: contestContext };
+  const headers = splitCSVLine(lines[0]).map(normalizeHeader);
+  let month = null;
+  let year = null;
+  let weeksCompleted = 0;
+  let maxWeeks = 0;
+  let latestWeekNumber = 0;
+
   for (const line of lines.slice(1)) {
     const cells = splitCSVLine(line);
     const raw = {};
-    headers.forEach((header, index) => raw[header] = cells[index] !== undefined ? cells[index].trim() : "");
+    headers.forEach((header, index) => {
+      raw[header] = cells[index] !== undefined ? cells[index].trim() : "";
+    });
     const id = raw.departmentid;
     if (!id) continue;
-    const weekScores = [1,2,3,4,5].map((week) => Number(raw[`week${week}`] || 0));
-    weekScores.forEach((score, index) => { if (score > 0) latestWeekNumber = Math.max(latestWeekNumber, index + 1); });
+    const weekScores = [1, 2, 3, 4, 5].map((week) => Number(raw[`week${week}`] || 0));
+    weekScores.forEach((score, index) => {
+      if (score > 0) latestWeekNumber = Math.max(latestWeekNumber, index + 1);
+    });
     const row = {
       id,
       gameScore: Number(raw.gamescore || raw.score || 0),
@@ -208,14 +225,25 @@ function parseScoresCSV(csvText) {
       yearlyScore: Number(raw.yearlyscore || 0),
       weekScores,
     };
-    if (!contextMonth && row.month) contextMonth = row.month;
-    if (!contextYear && row.year) contextYear = row.year;
-    contextWeeksCompleted = Math.max(contextWeeksCompleted, row.weeksCompleted || 0);
-    contextMaxWeeks = Math.max(contextMaxWeeks, row.maxWeeks || 0);
     rows.set(id, row);
+    if (!month && row.month) month = row.month;
+    if (!year && row.year) year = row.year;
+    weeksCompleted = Math.max(weeksCompleted, row.weeksCompleted || 0);
+    maxWeeks = Math.max(maxWeeks, row.maxWeeks || 0);
   }
-  if (!latestWeekNumber) latestWeekNumber = contextWeeksCompleted;
-  return { rows, context: { month: contextMonth, year: contextYear, displayMonth: formatMonthYear(contextMonth, contextYear), weeksCompleted: contextWeeksCompleted, maxWeeks: contextMaxWeeks, latestWeekNumber } };
+
+  if (!latestWeekNumber) latestWeekNumber = weeksCompleted;
+  return {
+    rows,
+    context: {
+      month,
+      year,
+      displayMonth: formatMonthYear(month, year),
+      weeksCompleted,
+      maxWeeks,
+      latestWeekNumber,
+    },
+  };
 }
 
 function splitCSVLine(line) {
@@ -225,19 +253,50 @@ function splitCSVLine(line) {
   for (let i = 0; i < line.length; i++) {
     const char = line[i];
     if (char === '"') {
-      if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
-      else inQuotes = !inQuotes;
-    } else if (char === "," && !inQuotes) { result.push(current); current = ""; }
-    else current += char;
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i += 1;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === "," && !inQuotes) {
+      result.push(current);
+      current = "";
+    } else {
+      current += char;
+    }
   }
   result.push(current);
   return result;
 }
-function normalizeHeader(value) { return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, ""); }
-function getWeekScore(weekScores, weekNumber) { if (!weekNumber || weekNumber < 1) return 0; return Number(weekScores[weekNumber - 1] || 0); }
-function formatMonthYear(month, year) { if (!month || !year) return "Current Competition"; const monthName = new Date(Number(year), Number(month) - 1, 1).toLocaleString("en-US", { month: "long" }); return `${monthName} ${year}`; }
-function getPerformanceStatus(avg) { const value = Number(avg || 0); if (value >= 90) return { label: "Excellent", className: "status-excellent" }; if (value >= 80) return { label: "Strong", className: "status-strong" }; if (value >= 70) return { label: "Good", className: "status-good" }; return { label: "Needs Support", className: "status-support" }; }
-function statusBadgeHtml(department) { const status = department.status || getPerformanceStatus(department.currentAverage); return `<span class="status-badge ${status.className}">${status.label}</span>`; }
+
+function normalizeHeader(value) {
+  return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function getWeekScore(weekScores, weekNumber) {
+  if (!weekNumber || weekNumber < 1) return 0;
+  return Number(weekScores[weekNumber - 1] || 0);
+}
+
+function formatMonthYear(month, year) {
+  if (!month || !year) return "Current Competition";
+  const monthName = new Date(Number(year), Number(month) - 1, 1).toLocaleString("en-US", { month: "long" });
+  return `${monthName} ${year}`;
+}
+
+function getPerformanceStatus(avg) {
+  const value = Number(avg || 0);
+  if (value >= 90) return { label: "Excellent", className: "status-excellent" };
+  if (value >= 80) return { label: "Strong", className: "status-strong" };
+  if (value >= 70) return { label: "Good", className: "status-good" };
+  return { label: "Needs Support", className: "status-support" };
+}
+
+function statusBadgeHtml(department) {
+  const status = department.status || getPerformanceStatus(department.currentAverage);
+  return `<span class="status-badge ${status.className}">${status.label}</span>`;
+}
 
 function getGridPosition(index) {
   if (index >= 0 && index <= 5) return { row: 1, col: index + 1 };
@@ -342,7 +401,9 @@ function markerHtml(team, large = false, suppressRank = false) {
   const sizeStyle = icon ? (large ? "width:46px;height:46px;font-size:0;" : "width:38px;height:38px;font-size:0;") : "";
   const status = team.status || getPerformanceStatus(team.currentAverage);
   const title = `${team.name} | ${status.label} | Avg: ${formatScore(team.currentAverage)} | Total: ${formatScore(team.totalScore)} | Board Progress: ${formatScore(team.gameScore || team.score)} | Weeks: ${team.weeksCompleted || 0}/${team.maxWeeks || contestContext.maxWeeks || 0}`;
-  if (icon) return `<div class="marker icon-marker ${large ? "large" : ""} ${team.color} ${rankClass} ${status.className}" style="${sizeStyle}${rankStyle}" title="${escapeHtml(title)}">${icon}</div>`;
+  if (icon) {
+    return `<div class="marker icon-marker ${large ? "large" : ""} ${team.color} ${rankClass} ${status.className}" style="${sizeStyle}${rankStyle}" title="${escapeHtml(title)}">${icon}</div>`;
+  }
   return `<div class="marker ${large ? "large" : ""} ${team.color} ${rankClass} ${status.className}" style="${rankStyle}" title="${escapeHtml(title)}">${initials}</div>`;
 }
 
@@ -494,17 +555,26 @@ function renderInsights() {
 }
 
 function getCurrentWeekLeaders() {
-  return [...departments].filter((department) => Number(department.currentWeekScore || 0) > 0).sort((a, b) => b.currentWeekScore - a.currentWeekScore || a.name.localeCompare(b.name));
+  return [...departments]
+    .filter((department) => Number(department.currentWeekScore || 0) > 0)
+    .sort((a, b) => b.currentWeekScore - a.currentWeekScore || a.name.localeCompare(b.name));
 }
+
 function getTopImprovers(limit = 3) {
-  return [...departments].map((department) => ({ ...department, movement: Number(department.currentWeekScore || 0) - Number(department.previousWeekScore || 0) })).filter((department) => department.previousWeekScore > 0 && department.currentWeekScore > 0).sort((a, b) => b.movement - a.movement || b.currentWeekScore - a.currentWeekScore || a.name.localeCompare(b.name)).slice(0, limit);
+  return [...departments]
+    .map((department) => ({ ...department, movement: Number(department.currentWeekScore || 0) - Number(department.previousWeekScore || 0) }))
+    .filter((department) => department.previousWeekScore > 0 && department.currentWeekScore > 0)
+    .sort((a, b) => b.movement - a.movement || b.currentWeekScore - a.currentWeekScore || a.name.localeCompare(b.name))
+    .slice(0, limit);
 }
+
 function renderSeasonBanner() {
   const banner = document.getElementById("seasonBanner");
   if (!banner) return;
   const weekText = contestContext.maxWeeks ? `Week ${contestContext.weeksCompleted || contestContext.latestWeekNumber || 0} of ${contestContext.maxWeeks}` : "Current standings";
   banner.innerHTML = `<div class="season-banner-left"><div class="season-kicker">Current Competition</div><div class="season-title">${escapeHtml(contestContext.displayMonth)}</div></div><div class="season-banner-right">${escapeHtml(weekText)}</div>`;
 }
+
 function renderProgressOverview() {
   const card = document.getElementById("progressOverview");
   if (!card) return;
@@ -513,8 +583,9 @@ function renderProgressOverview() {
   const progressPct = maxWeeks ? Math.min(100, Math.max(0, (weeksCompleted / maxWeeks) * 100)) : 0;
   const bestThisWeek = getCurrentWeekLeaders()[0];
   const avgCurrent = averageScore(departments.filter((department) => department.currentAverage > 0));
-  card.innerHTML = `<div class="progress-header"><div><div class="progress-kicker">Monthly Race Progress</div><h2>${escapeHtml(contestContext.displayMonth)}</h2></div><div class="progress-week-pill">${weeksCompleted} of ${maxWeeks || "-"} weeks complete</div></div><div class="progress-track" aria-label="Monthly progress"><div class="progress-fill" style="width:${progressPct}%"></div></div><div class="progress-stats"><div class="progress-stat"><div class="progress-stat-label">Month Progress</div><div class="progress-stat-value">${Math.round(progressPct)}%</div></div><div class="progress-stat"><div class="progress-stat-label">Best This Week</div><div class="progress-stat-value small">${bestThisWeek ? escapeHtml(bestThisWeek.name) : "-"}</div><div class="progress-stat-sub">${bestThisWeek ? formatScore(bestThisWeek.currentWeekScore) : "No weekly score"}</div></div><div class="progress-stat"><div class="progress-stat-label">Portfolio Avg</div><div class="progress-stat-value">${formatScore(avgCurrent)}</div></div></div>`;
+  card.innerHTML = `<div class="progress-header"><div><div class="progress-kicker">Monthly Race Progress</div><h2>${escapeHtml(contestContext.displayMonth)}</h2></div><div class="progress-week-pill">${weeksCompleted} of ${maxWeeks || "-"} weeks complete</div></div><div class="progress-track"><div class="progress-fill" style="width:${progressPct}%"></div></div><div class="progress-stats"><div class="progress-stat"><div class="progress-stat-label">Month Progress</div><div class="progress-stat-value">${Math.round(progressPct)}%</div></div><div class="progress-stat"><div class="progress-stat-label">Best This Week</div><div class="progress-stat-value small">${bestThisWeek ? escapeHtml(bestThisWeek.name) : "-"}</div><div class="progress-stat-sub">${bestThisWeek ? formatScore(bestThisWeek.currentWeekScore) : "No weekly score"}</div></div><div class="progress-stat"><div class="progress-stat-label">Portfolio Avg</div><div class="progress-stat-value">${formatScore(avgCurrent)}</div></div></div>`;
 }
+
 function renderMoversInsights() {
   const card = document.getElementById("moversInsights");
   if (!card) return;
@@ -553,12 +624,30 @@ function renderRankingDivision(group) {
         <div class="ranking-left">
           <div class="rank-badge">${rank}</div>
           ${markerHtml(department)}
-          <div class="ranking-name-wrap"><span class="ranking-name">${escapeHtml(department.name)}</span>${statusBadgeHtml(department)}</div>
+          <div class="ranking-name-wrap">
+            <span class="ranking-name">${escapeHtml(department.name)}</span>
+            ${statusBadgeHtml(department)}
+          </div>
         </div>
-        <div class="ranking-score-stack"><span class="ranking-score">${formatScore(department.currentAverage)} avg</span><span class="ranking-sub-score">${formatScore(department.totalScore)} total</span></div>
-      </div>`;
+        <div class="ranking-score-stack">
+          <span class="ranking-score">${formatScore(department.currentAverage)} avg</span>
+          <span class="ranking-sub-score">${formatScore(department.totalScore)} total</span>
+        </div>
+      </div>
+    `;
   }).join("");
-  return `<section class="ranking-division ${group}"><div class="ranking-division-header"><h3>${getDepartmentGroupLabel(group)}</h3><span>${rankedDepartments.length} departments</span></div><div class="ranking-division-grid">${rows}</div><div class="division-average-card"><div class="division-average-label">${getDepartmentGroupLabel(group)} Average</div><div class="division-average-score">${formatScore(averageScore(rankedDepartments))}</div></div></section>`;
+  return `
+    <section class="ranking-division ${group}">
+      <div class="ranking-division-header">
+        <h3>${getDepartmentGroupLabel(group)}</h3>
+        <span>${rankedDepartments.length} departments</span>
+      </div>
+      <div class="ranking-division-grid">${rows}</div>
+      <div class="division-average-card">
+        <div class="division-average-label">${getDepartmentGroupLabel(group)} Average</div>
+        <div class="division-average-score">${formatScore(averageScore(rankedDepartments))}</div>
+      </div>
+    </section>`;
 }
 
 function renderRankings() {
