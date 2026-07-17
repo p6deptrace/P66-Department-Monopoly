@@ -2,7 +2,6 @@
 
 const imagePath = (fileName) => `Images/${fileName}`;
 const scoresPath = "scores.csv";
-const MAX_VISIBLE_TILE_TOKENS = 7;
 
 const boardSpaceData = [
   { name: "START", points: 0, type: "corner", image: "Start.png" },
@@ -111,14 +110,7 @@ const departmentBank = [
 ];
 
 let departments = departmentBank.map((department) => ({ ...department, score: 0 }));
-let contestContext = {
-  month: null,
-  year: null,
-  displayMonth: "Current Competition",
-  weeksCompleted: 0,
-  maxWeeks: 0,
-  latestWeekNumber: 0,
-};
+let contestContext = { month: null, year: null, displayMonth: "Current Competition", weeksCompleted: 0, maxWeeks: 0, latestWeekNumber: 0 };
 
 function updateStaticText() {
   const headerRow = document.querySelector(".header-row");
@@ -194,30 +186,17 @@ async function loadScoresFromCSV() {
 function parseScoresCSV(csvText) {
   const lines = csvText.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
   if (!lines.length) return { rows: new Map(), context: contestContext };
-
   const headers = splitCSVLine(lines[0]).map(normalizeHeader);
   const rows = new Map();
-  let contextMonth = null;
-  let contextYear = null;
-  let contextWeeksCompleted = 0;
-  let contextMaxWeeks = 0;
-  let latestWeekNumber = 0;
-
+  let contextMonth = null, contextYear = null, contextWeeksCompleted = 0, contextMaxWeeks = 0, latestWeekNumber = 0;
   for (const line of lines.slice(1)) {
     const cells = splitCSVLine(line);
     const raw = {};
-    headers.forEach((header, index) => {
-      raw[header] = cells[index] !== undefined ? cells[index].trim() : "";
-    });
-
+    headers.forEach((header, index) => raw[header] = cells[index] !== undefined ? cells[index].trim() : "");
     const id = raw.departmentid;
     if (!id) continue;
-
-    const weekScores = [1, 2, 3, 4, 5].map((week) => Number(raw[`week${week}`] || 0));
-    weekScores.forEach((score, index) => {
-      if (score > 0) latestWeekNumber = Math.max(latestWeekNumber, index + 1);
-    });
-
+    const weekScores = [1,2,3,4,5].map((week) => Number(raw[`week${week}`] || 0));
+    weekScores.forEach((score, index) => { if (score > 0) latestWeekNumber = Math.max(latestWeekNumber, index + 1); });
     const row = {
       id,
       gameScore: Number(raw.gamescore || raw.score || 0),
@@ -229,27 +208,14 @@ function parseScoresCSV(csvText) {
       yearlyScore: Number(raw.yearlyscore || 0),
       weekScores,
     };
-
     if (!contextMonth && row.month) contextMonth = row.month;
     if (!contextYear && row.year) contextYear = row.year;
     contextWeeksCompleted = Math.max(contextWeeksCompleted, row.weeksCompleted || 0);
     contextMaxWeeks = Math.max(contextMaxWeeks, row.maxWeeks || 0);
     rows.set(id, row);
   }
-
   if (!latestWeekNumber) latestWeekNumber = contextWeeksCompleted;
-
-  return {
-    rows,
-    context: {
-      month: contextMonth,
-      year: contextYear,
-      displayMonth: formatMonthYear(contextMonth, contextYear),
-      weeksCompleted: contextWeeksCompleted,
-      maxWeeks: contextMaxWeeks,
-      latestWeekNumber,
-    },
-  };
+  return { rows, context: { month: contextMonth, year: contextYear, displayMonth: formatMonthYear(contextMonth, contextYear), weeksCompleted: contextWeeksCompleted, maxWeeks: contextMaxWeeks, latestWeekNumber } };
 }
 
 function splitCSVLine(line) {
@@ -259,50 +225,19 @@ function splitCSVLine(line) {
   for (let i = 0; i < line.length; i++) {
     const char = line[i];
     if (char === '"') {
-      if (inQuotes && line[i + 1] === '"') {
-        current += '"';
-        i++;
-      } else {
-        inQuotes = !inQuotes;
-      }
-    } else if (char === "," && !inQuotes) {
-      result.push(current);
-      current = "";
-    } else {
-      current += char;
-    }
+      if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
+      else inQuotes = !inQuotes;
+    } else if (char === "," && !inQuotes) { result.push(current); current = ""; }
+    else current += char;
   }
   result.push(current);
   return result;
 }
-
-function normalizeHeader(value) {
-  return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-}
-
-function getWeekScore(weekScores, weekNumber) {
-  if (!weekNumber || weekNumber < 1) return 0;
-  return Number(weekScores[weekNumber - 1] || 0);
-}
-
-function formatMonthYear(month, year) {
-  if (!month || !year) return "Current Competition";
-  const monthName = new Date(Number(year), Number(month) - 1, 1).toLocaleString("en-US", { month: "long" });
-  return `${monthName} ${year}`;
-}
-
-function getPerformanceStatus(avg) {
-  const value = Number(avg || 0);
-  if (value >= 90) return { label: "Excellent", className: "status-excellent" };
-  if (value >= 80) return { label: "Strong", className: "status-strong" };
-  if (value >= 70) return { label: "Good", className: "status-good" };
-  return { label: "Needs Support", className: "status-support" };
-}
-
-function statusBadgeHtml(department) {
-  const status = department.status || getPerformanceStatus(department.currentAverage);
-  return `<span class="status-badge ${status.className}">${status.label}</span>`;
-}
+function normalizeHeader(value) { return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, ""); }
+function getWeekScore(weekScores, weekNumber) { if (!weekNumber || weekNumber < 1) return 0; return Number(weekScores[weekNumber - 1] || 0); }
+function formatMonthYear(month, year) { if (!month || !year) return "Current Competition"; const monthName = new Date(Number(year), Number(month) - 1, 1).toLocaleString("en-US", { month: "long" }); return `${monthName} ${year}`; }
+function getPerformanceStatus(avg) { const value = Number(avg || 0); if (value >= 90) return { label: "Excellent", className: "status-excellent" }; if (value >= 80) return { label: "Strong", className: "status-strong" }; if (value >= 70) return { label: "Good", className: "status-good" }; return { label: "Needs Support", className: "status-support" }; }
+function statusBadgeHtml(department) { const status = department.status || getPerformanceStatus(department.currentAverage); return `<span class="status-badge ${status.className}">${status.label}</span>`; }
 
 function getGridPosition(index) {
   if (index >= 0 && index <= 5) return { row: 1, col: index + 1 };
@@ -407,10 +342,7 @@ function markerHtml(team, large = false, suppressRank = false) {
   const sizeStyle = icon ? (large ? "width:46px;height:46px;font-size:0;" : "width:38px;height:38px;font-size:0;") : "";
   const status = team.status || getPerformanceStatus(team.currentAverage);
   const title = `${team.name} | ${status.label} | Avg: ${formatScore(team.currentAverage)} | Total: ${formatScore(team.totalScore)} | Board Progress: ${formatScore(team.gameScore || team.score)} | Weeks: ${team.weeksCompleted || 0}/${team.maxWeeks || contestContext.maxWeeks || 0}`;
-
-  if (icon) {
-    return `<div class="marker icon-marker ${large ? "large" : ""} ${team.color} ${rankClass} ${status.className}" style="${sizeStyle}${rankStyle}" title="${escapeHtml(title)}">${icon}</div>`;
-  }
+  if (icon) return `<div class="marker icon-marker ${large ? "large" : ""} ${team.color} ${rankClass} ${status.className}" style="${sizeStyle}${rankStyle}" title="${escapeHtml(title)}">${icon}</div>`;
   return `<div class="marker ${large ? "large" : ""} ${team.color} ${rankClass} ${status.className}" style="${rankStyle}" title="${escapeHtml(title)}">${initials}</div>`;
 }
 
@@ -420,16 +352,10 @@ function tileHtml(space, teams) {
   const visibleTeams = teams.slice(0, MAX_VISIBLE_TILE_TOKENS);
   const hiddenTeams = teams.slice(MAX_VISIBLE_TILE_TOKENS);
   const hiddenCount = hiddenTeams.length;
-  const hiddenList = hiddenTeams
-    .map((team) => `<li>${escapeHtml(team.name)} <span>${team.status.label} • ${formatScore(team.currentAverage)}</span></li>`)
-    .join("");
+  const hiddenList = hiddenTeams.map((team) => `<li>${escapeHtml(team.name)} <span>${team.status.label} • ${formatScore(team.currentAverage)}</span></li>`).join("");
   const hiddenTitle = hiddenTeams.map((team) => `${team.name} - ${team.status.label} - Avg ${formatScore(team.currentAverage)}`).join(" | ");
-  const overflowBadge = hiddenCount
-    ? `<div class="tile-overflow-badge" title="${escapeHtml(hiddenTitle)}">+${hiddenCount}</div>`
-    : "";
-  const overflowPopover = hiddenCount
-    ? `<div class="tile-overflow-popover"><div class="tile-overflow-title">Also on ${escapeHtml(space.name)}</div><ul>${hiddenList}</ul></div>`
-    : "";
+  const overflowBadge = hiddenCount ? `<div class="tile-overflow-badge" title="${escapeHtml(hiddenTitle)}">+${hiddenCount}</div>` : "";
+  const overflowPopover = hiddenCount ? `<div class="tile-overflow-popover"><div class="tile-overflow-title">Also on ${escapeHtml(space.name)}</div><ul>${hiddenList}</ul></div>` : "";
   return `<div class="tile ${cornerClass}">${image}<div class="tile-overlay"></div><div class="tile-ring"></div><div class="tile-teams">${visibleTeams.map((team) => markerHtml(team)).join("")}${overflowBadge}</div>${overflowPopover}<div class="tile-name">${escapeHtml(space.name)}</div></div>`;
 }
 
@@ -447,7 +373,7 @@ function spireHtml() {
         .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name))
         .map((team) => `<span class="spire-club-member">${markerHtml(team, false, true)} <span>${escapeHtml(team.name)}</span></span>`)
         .join("")
-    : `<div class="spire-club-empty">No additional 100+ departments yet.</div>`;
+    : `<div class="spire-club-empty">No additional elite performers yet.</div>`;
 
   const levelLines = spireLevels.map((level) => `<div class="spire-level" style="bottom:${levelBottom(level)}px"><div class="spire-level-label ${level === 110 ? "crown" : ""}">${level}</div><div class="spire-level-line"></div></div>`).join("");
   const climberMarkers = climbers.map((team, index) => {
@@ -456,13 +382,13 @@ function spireHtml() {
     const sideOffset = index % 2 === 0 ? 214 : 52;
     return `<div class="spire-marker-wrap" style="bottom:${bottom}px; left:${sideOffset}px">${markerHtml(team, true)}</div>`;
   }).join("");
-  const championHtml = champion ? `<div class="spire-champion">${markerHtml(champion)}<div><div class="champion-name">${escapeHtml(champion.name)}</div><div class="champion-score">${champion.score} pts shown at ${getDisplayedSpireLevel(champion.score)}</div></div></div>` : `<div class="champion-score" style="margin-top:8px">No department has reached 100 yet.</div>`;
+  const championHtml = champion ? `<div class="spire-champion">${markerHtml(champion)}<div><div class="champion-name">${escapeHtml(champion.name)}</div><div class="champion-score">${formatScore(champion.currentAverage)} avg • ${formatScore(champion.gameScore || champion.score)} progress</div></div></div>` : `<div class="champion-score" style="margin-top:8px">No department has reached the Spire yet.</div>`;
   const legendRows = spireLevels.map((level) => {
     const teamsAtLevel = climbers.filter((team) => getDisplayedSpireLevel(team.score) === level);
     return `<div class="spire-legend-row"><div class="legend-level ${level === 110 ? "crown" : ""}">${level}</div><div class="legend-label">${level === 110 ? "Crown" : level === 100 ? "Entry" : "Climb"}</div><div class="legend-markers">${teamsAtLevel.map((team) => markerHtml(team)).join("")}</div></div>`;
   }).join("");
 
-  return `<div class="spire-card"><div class="spire-bg-one"></div><div class="spire-bg-two"></div><div class="spire-bg-three"></div><div class="spire-layout"><div class="spire-info"><div class="spire-heading-block" style="text-align:center;margin-bottom:14px;"><div class="spire-eyebrow" style="text-align:center;">The Race to</div><h2 class="spire-title" style="text-align:center;">The Spire</h2></div><div class="spire-top-box"><div class="spire-box-label">Current Top Climber</div>${championHtml}</div><div class="spire-club-box"><div class="spire-box-label">100+ Club</div><div class="spire-club-members">${otherClimbersHtml}</div></div></div><div class="spire-tower"><div class="tower-glow"></div><div class="tower-spire"></div><div class="tower-neck"></div><div class="tower-top"></div><div class="tower-body"><div class="tower-center-column"></div><div class="tower-fade"></div></div><div class="tower-base-one"></div><div class="tower-base-two"></div>${levelLines}${climberMarkers}</div><div class="spire-legend">${legendRows}</div></div></div>`;
+  return `<div class="spire-card"><div class="spire-bg-one"></div><div class="spire-bg-two"></div><div class="spire-bg-three"></div><div class="spire-layout"><div class="spire-info"><div class="spire-heading-block" style="text-align:center;margin-bottom:14px;"><div class="spire-eyebrow" style="text-align:center;">The Race to</div><h2 class="spire-title" style="text-align:center;">The Spire</h2></div><div class="spire-top-box"><div class="spire-box-label">Current Top Climber</div>${championHtml}</div><div class="spire-club-box"><div class="spire-box-label">Elite Monthly Performers</div><div class="spire-club-members">${otherClimbersHtml}</div></div></div><div class="spire-tower"><div class="tower-glow"></div><div class="tower-spire"></div><div class="tower-neck"></div><div class="tower-top"></div><div class="tower-body"><div class="tower-center-column"></div><div class="tower-fade"></div></div><div class="tower-base-one"></div><div class="tower-base-two"></div>${levelLines}${climberMarkers}</div><div class="spire-legend">${legendRows}</div></div></div>`;
 }
 
 
@@ -568,102 +494,33 @@ function renderInsights() {
 }
 
 function getCurrentWeekLeaders() {
-  return [...departments]
-    .filter((department) => Number(department.currentWeekScore || 0) > 0)
-    .sort((a, b) => b.currentWeekScore - a.currentWeekScore || a.name.localeCompare(b.name));
+  return [...departments].filter((department) => Number(department.currentWeekScore || 0) > 0).sort((a, b) => b.currentWeekScore - a.currentWeekScore || a.name.localeCompare(b.name));
 }
-
 function getTopImprovers(limit = 3) {
-  return [...departments]
-    .map((department) => ({
-      ...department,
-      movement: Number(department.currentWeekScore || 0) - Number(department.previousWeekScore || 0),
-    }))
-    .filter((department) => department.previousWeekScore > 0 && department.currentWeekScore > 0)
-    .sort((a, b) => b.movement - a.movement || b.currentWeekScore - a.currentWeekScore || a.name.localeCompare(b.name))
-    .slice(0, limit);
+  return [...departments].map((department) => ({ ...department, movement: Number(department.currentWeekScore || 0) - Number(department.previousWeekScore || 0) })).filter((department) => department.previousWeekScore > 0 && department.currentWeekScore > 0).sort((a, b) => b.movement - a.movement || b.currentWeekScore - a.currentWeekScore || a.name.localeCompare(b.name)).slice(0, limit);
 }
-
 function renderSeasonBanner() {
   const banner = document.getElementById("seasonBanner");
   if (!banner) return;
-  const weekText = contestContext.maxWeeks
-    ? `Week ${contestContext.weeksCompleted || contestContext.latestWeekNumber || 0} of ${contestContext.maxWeeks}`
-    : "Current standings";
-  banner.innerHTML = `
-    <div class="season-banner-left">
-      <div class="season-kicker">Current Competition</div>
-      <div class="season-title">${escapeHtml(contestContext.displayMonth)}</div>
-    </div>
-    <div class="season-banner-right">${escapeHtml(weekText)}</div>
-  `;
+  const weekText = contestContext.maxWeeks ? `Week ${contestContext.weeksCompleted || contestContext.latestWeekNumber || 0} of ${contestContext.maxWeeks}` : "Current standings";
+  banner.innerHTML = `<div class="season-banner-left"><div class="season-kicker">Current Competition</div><div class="season-title">${escapeHtml(contestContext.displayMonth)}</div></div><div class="season-banner-right">${escapeHtml(weekText)}</div>`;
 }
-
 function renderProgressOverview() {
   const card = document.getElementById("progressOverview");
   if (!card) return;
   const maxWeeks = Number(contestContext.maxWeeks || 0);
   const weeksCompleted = Number(contestContext.weeksCompleted || contestContext.latestWeekNumber || 0);
   const progressPct = maxWeeks ? Math.min(100, Math.max(0, (weeksCompleted / maxWeeks) * 100)) : 0;
-  const weekLeaders = getCurrentWeekLeaders();
-  const bestThisWeek = weekLeaders[0];
+  const bestThisWeek = getCurrentWeekLeaders()[0];
   const avgCurrent = averageScore(departments.filter((department) => department.currentAverage > 0));
-
-  card.innerHTML = `
-    <div class="progress-header">
-      <div>
-        <div class="progress-kicker">Monthly Race Progress</div>
-        <h2>${escapeHtml(contestContext.displayMonth)}</h2>
-      </div>
-      <div class="progress-week-pill">${weeksCompleted} of ${maxWeeks || "-"} weeks complete</div>
-    </div>
-    <div class="progress-track" aria-label="Monthly progress">
-      <div class="progress-fill" style="width:${progressPct}%"></div>
-    </div>
-    <div class="progress-stats">
-      <div class="progress-stat">
-        <div class="progress-stat-label">Month Progress</div>
-        <div class="progress-stat-value">${Math.round(progressPct)}%</div>
-      </div>
-      <div class="progress-stat">
-        <div class="progress-stat-label">Best This Week</div>
-        <div class="progress-stat-value small">${bestThisWeek ? escapeHtml(bestThisWeek.name) : "-"}</div>
-        <div class="progress-stat-sub">${bestThisWeek ? formatScore(bestThisWeek.currentWeekScore) : "No weekly score"}</div>
-      </div>
-      <div class="progress-stat">
-        <div class="progress-stat-label">Portfolio Avg</div>
-        <div class="progress-stat-value">${formatScore(avgCurrent)}</div>
-      </div>
-    </div>
-  `;
+  card.innerHTML = `<div class="progress-header"><div><div class="progress-kicker">Monthly Race Progress</div><h2>${escapeHtml(contestContext.displayMonth)}</h2></div><div class="progress-week-pill">${weeksCompleted} of ${maxWeeks || "-"} weeks complete</div></div><div class="progress-track" aria-label="Monthly progress"><div class="progress-fill" style="width:${progressPct}%"></div></div><div class="progress-stats"><div class="progress-stat"><div class="progress-stat-label">Month Progress</div><div class="progress-stat-value">${Math.round(progressPct)}%</div></div><div class="progress-stat"><div class="progress-stat-label">Best This Week</div><div class="progress-stat-value small">${bestThisWeek ? escapeHtml(bestThisWeek.name) : "-"}</div><div class="progress-stat-sub">${bestThisWeek ? formatScore(bestThisWeek.currentWeekScore) : "No weekly score"}</div></div><div class="progress-stat"><div class="progress-stat-label">Portfolio Avg</div><div class="progress-stat-value">${formatScore(avgCurrent)}</div></div></div>`;
 }
-
 function renderMoversInsights() {
   const card = document.getElementById("moversInsights");
   if (!card) return;
   const movers = getTopImprovers(3);
-  const rows = movers.length ? movers.map((department, index) => `
-    <div class="mover-row">
-      <div class="mover-rank">#${index + 1}</div>
-      ${markerHtml(department, false, true)}
-      <div class="mover-name-block">
-        <div class="mover-name">${escapeHtml(department.name)} ${statusBadgeHtml(department)}</div>
-        <div class="mover-sub">Week ${contestContext.latestWeekNumber - 1}: ${formatScore(department.previousWeekScore)} → Week ${contestContext.latestWeekNumber}: ${formatScore(department.currentWeekScore)}</div>
-      </div>
-      <div class="mover-delta">+${formatNumber(department.movement)}</div>
-    </div>
-  `).join("") : `<div class="movers-empty">Not enough week-over-week data yet.</div>`;
-
-  card.innerHTML = `
-    <div class="movers-header">
-      <div>
-        <div class="movers-kicker">Momentum Watch</div>
-        <h2>Biggest Improvements This Week</h2>
-      </div>
-      <div class="movers-note">Compared to prior week</div>
-    </div>
-    <div class="movers-grid">${rows}</div>
-  `;
+  const rows = movers.length ? movers.map((department, index) => `<div class="mover-row"><div class="mover-rank">#${index + 1}</div>${markerHtml(department, false, true)}<div class="mover-name-block"><div class="mover-name">${escapeHtml(department.name)} ${statusBadgeHtml(department)}</div><div class="mover-sub">Week ${contestContext.latestWeekNumber - 1}: ${formatScore(department.previousWeekScore)} → Week ${contestContext.latestWeekNumber}: ${formatScore(department.currentWeekScore)}</div></div><div class="mover-delta">+${formatNumber(department.movement)}</div></div>`).join("") : `<div class="movers-empty">Not enough week-over-week data yet.</div>`;
+  card.innerHTML = `<div class="movers-header"><div><div class="movers-kicker">Momentum Watch</div><h2>Biggest Improvements This Week</h2></div><div class="movers-note">Compared to prior week</div></div><div class="movers-grid">${rows}</div>`;
 }
 
 function renderBoard() {
@@ -689,7 +546,6 @@ function renderRankingDivision(group) {
   const rankedDepartments = [...departments]
     .filter((department) => getDepartmentGroup(department.id) === group)
     .sort((a, b) => b.currentAverage - a.currentAverage || b.totalScore - a.totalScore || a.name.localeCompare(b.name));
-
   const rows = rankedDepartments.map((department, index) => {
     const rank = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`;
     return `
@@ -697,34 +553,12 @@ function renderRankingDivision(group) {
         <div class="ranking-left">
           <div class="rank-badge">${rank}</div>
           ${markerHtml(department)}
-          <div class="ranking-name-wrap">
-            <span class="ranking-name">${escapeHtml(department.name)}</span>
-            ${statusBadgeHtml(department)}
-          </div>
+          <div class="ranking-name-wrap"><span class="ranking-name">${escapeHtml(department.name)}</span>${statusBadgeHtml(department)}</div>
         </div>
-        <div class="ranking-score-stack">
-          <span class="ranking-score">${formatScore(department.currentAverage)} avg</span>
-          <span class="ranking-sub-score">${formatScore(department.totalScore)} total</span>
-        </div>
-      </div>
-    `;
+        <div class="ranking-score-stack"><span class="ranking-score">${formatScore(department.currentAverage)} avg</span><span class="ranking-sub-score">${formatScore(department.totalScore)} total</span></div>
+      </div>`;
   }).join("");
-
-  return `
-    <section class="ranking-division ${group}">
-      <div class="ranking-division-header">
-        <h3>${getDepartmentGroupLabel(group)}</h3>
-        <span>${rankedDepartments.length} departments</span>
-      </div>
-      <div class="ranking-division-grid">
-        ${rows}
-      </div>
-      <div class="division-average-card">
-        <div class="division-average-label">${getDepartmentGroupLabel(group)} Average</div>
-        <div class="division-average-score">${formatScore(averageScore(rankedDepartments))}</div>
-      </div>
-    </section>
-  `;
+  return `<section class="ranking-division ${group}"><div class="ranking-division-header"><h3>${getDepartmentGroupLabel(group)}</h3><span>${rankedDepartments.length} departments</span></div><div class="ranking-division-grid">${rows}</div><div class="division-average-card"><div class="division-average-label">${getDepartmentGroupLabel(group)} Average</div><div class="division-average-score">${formatScore(averageScore(rankedDepartments))}</div></div></section>`;
 }
 
 function renderRankings() {
