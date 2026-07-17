@@ -697,7 +697,17 @@ function renderRankingDivision(group) {
     const rank = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`;
     return `<div class="ranking-row ${index < 3 ? "top" : ""}"><div class="ranking-left"><div class="rank-badge">${rank}</div>${markerHtml(department)}<div class="ranking-name-wrap"><span class="ranking-name">${escapeHtml(department.name)}</span>${statusBadgeHtml(department)}</div></div><div class="ranking-score-stack"><span class="ranking-score">${formatScore(department.totalScore || 0)} total</span><span class="ranking-sub-score">${formatScore(department.currentAverage || department.score)} weekly avg</span></div>${weeklyBreakdownHtml(department)}</div>`;
   }).join("");
-  return `<section class="ranking-division ${group}"><div class="ranking-division-header"><h3>${getDepartmentGroupLabel(group)}</h3><span>${rankedDepartments.length} departments</span></div><div class="ranking-division-grid">${rows}</div><div class="division-average-card"><div class="division-average-label">${getDepartmentGroupLabel(group)} Weekly Average</div><div class="division-average-score">${formatScore(averageScore(rankedDepartments))}</div></div></section>`;
+  return `<section class="ranking-division ${group}"><div class="ranking-division-header"><h3>${getDepartmentGroupLabel(group)}</h3><span>${rankedDepartments.length} departments</span></div><div class="ranking-division-grid">${rows}</div><div class="division-summary-grid">
+  <div class="division-average-card">
+    <div class="division-average-label">${getDepartmentGroupLabel(group)} Weekly Average</div>
+    <div class="division-average-score">${formatScore(averageScore(rankedDepartments))}</div>
+  </div>
+
+  <div class="division-average-card total-average-card">
+    <div class="division-average-label">${getDepartmentGroupLabel(group)} Total Points Avg / Dept</div>
+    <div class="division-average-score">${formatScore(totalAverageScore(rankedDepartments))}</div>
+  </div>
+</div></section>`;
 }
 
 function renderRankings() {
