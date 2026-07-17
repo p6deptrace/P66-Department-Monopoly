@@ -1606,369 +1606,43 @@ body::after {
 }
 
 
-/* ===== TILE OVERFLOW BADGE / HOVER LIST ===== */
-.tile-teams {
-  overflow: visible !important;
-  z-index: 9;
-}
-
-.tile-overflow-badge {
-  flex: 0 0 auto;
-  min-width: 32px;
-  height: 30px;
-  padding: 0 8px;
-  border-radius: 999px;
-  border: 2px solid rgba(215, 180, 106, 0.95);
-  background: rgba(8, 43, 73, 0.94);
-  color: #d7b46a;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 950;
-  line-height: 1;
-  box-shadow: 0 7px 14px rgba(15, 23, 42, 0.36);
-  pointer-events: none;
-}
-
-.tile-overflow-popover {
-  position: absolute;
-  left: 10px;
-  right: 10px;
-  top: 42px;
-  z-index: 30;
-  display: none;
-  padding: 10px 11px;
-  border-radius: 14px;
-  border: 1px solid rgba(215, 180, 106, 0.62);
-  background: rgba(8, 43, 73, 0.94);
-  color: #ffffff;
-  box-shadow: 0 16px 28px rgba(15, 23, 42, 0.34);
-  backdrop-filter: blur(6px);
-  pointer-events: none;
-}
-
-.tile:hover .tile-overflow-popover {
-  display: block;
-}
-
-.tile-overflow-title {
-  margin-bottom: 6px;
-  color: #d7b46a;
-  font-size: 10px;
-  font-weight: 950;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.tile-overflow-popover ul {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 4px;
-  max-height: 94px;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(215, 180, 106, 0.65) rgba(255, 255, 255, 0.12);
-}
-
-.tile-overflow-popover li {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  color: rgba(255, 255, 255, 0.95);
-  font-size: 11px;
-  font-weight: 850;
-  line-height: 1.25;
-}
-
-.tile-overflow-popover li span {
-  flex: 0 0 auto;
-  color: rgba(215, 180, 106, 0.92);
-  font-size: 10px;
-  font-weight: 950;
-}
-
-@media (max-width: 760px) {
-  .tile-overflow-popover {
-    top: 40px;
-  }
-
-  .tile-overflow-popover li {
-    font-size: 10px;
-  }
-}
-
-
-/* ===== V7 SCORE LOGIC / PROGRESS DASHBOARD ===== */
-.season-banner {
-  margin: 0 0 16px;
-  padding: 14px 18px;
-  border-radius: 22px;
-  border: 1px solid rgba(215, 180, 106, 0.44);
-  background: linear-gradient(135deg, rgba(8, 43, 73, 0.98), rgba(11, 71, 117, 0.92));
-  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.12);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-}
-
-.season-kicker,
-.progress-kicker,
-.movers-kicker {
-  color: #d7b46a;
-  font-size: 11px;
-  font-weight: 950;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
-.season-title {
-  margin-top: 2px;
-  color: #ffffff;
-  font-size: 27px;
-  font-weight: 950;
-  letter-spacing: -0.04em;
-  line-height: 1;
-  text-transform: uppercase;
-}
-
-.season-banner-right,
-.progress-week-pill,
-.movers-note {
-  flex: 0 0 auto;
-  border-radius: 999px;
-  border: 1px solid rgba(215, 180, 106, 0.46);
-  background: rgba(255, 255, 255, 0.08);
-  color: #f7efe2;
-  padding: 8px 12px;
-  font-size: 12px;
-  font-weight: 950;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.tile-points {
-  display: none !important;
-}
-
-.tile-teams {
-  top: 12px !important;
-  max-height: calc(100% - 70px) !important;
-}
-
-.progress-card,
-.movers-card {
-  margin: 16px 0;
-  padding: 16px;
-  border-radius: 22px;
-  border: 1px solid rgba(215, 180, 106, 0.42);
-  background:
-    radial-gradient(circle at top right, rgba(103, 213, 223, 0.15), transparent 42%),
-    linear-gradient(135deg, rgba(8, 43, 73, 0.98), rgba(11, 71, 117, 0.92));
-  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.12);
-  color: white;
-}
-
-.progress-header,
-.movers-header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 14px;
-}
-
-.progress-header h2,
-.movers-header h2 {
-  margin: 2px 0 0;
-  color: #ffffff;
-  font-size: 24px;
-  font-weight: 950;
-  letter-spacing: -0.03em;
-  line-height: 1;
-}
-
-.progress-track {
-  position: relative;
-  height: 16px;
-  overflow: hidden;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.11);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
-}
-
-.progress-fill {
-  height: 100%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #67d5df, #d7b46a);
-  box-shadow: 0 0 18px rgba(215, 180, 106, 0.36);
-}
-
-.progress-stats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 12px;
-}
-
-.progress-stat {
-  min-height: 86px;
-  padding: 12px;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.progress-stat-label {
-  color: #d7b46a;
-  font-size: 10px;
-  font-weight: 950;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.progress-stat-value {
-  margin-top: 5px;
-  color: #ffffff;
-  font-size: 26px;
-  font-weight: 950;
-  letter-spacing: -0.04em;
-  line-height: 1;
-}
-
-.progress-stat-value.small {
-  font-size: 20px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.progress-stat-sub {
-  margin-top: 5px;
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.ranking-name-wrap {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  min-width: 0;
-  flex-wrap: wrap;
-}
-
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 3px 8px;
-  border-radius: 999px;
-  font-size: 9px;
-  font-weight: 950;
-  letter-spacing: 0.06em;
-  line-height: 1;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.status-excellent { background: rgba(215, 180, 106, 0.18); color: #8c6f2f; border: 1px solid rgba(215, 180, 106, 0.55); }
-.status-strong { background: rgba(103, 213, 223, 0.18); color: #0b4775; border: 1px solid rgba(103, 213, 223, 0.55); }
-.status-good { background: rgba(34, 197, 94, 0.14); color: #047857; border: 1px solid rgba(34, 197, 94, 0.38); }
-.status-support { background: rgba(244, 63, 94, 0.13); color: #be123c; border: 1px solid rgba(244, 63, 94, 0.38); }
-
-.ranking-score-stack {
-  flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 3px;
-}
-
-.ranking-sub-score {
-  color: #64748b;
-  font-size: 10px;
-  font-weight: 850;
-}
-
-.movers-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.mover-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-  padding: 12px;
-  border-radius: 17px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.mover-rank {
-  flex: 0 0 auto;
-  color: #d7b46a;
-  font-size: 14px;
-  font-weight: 950;
-}
-
-.mover-name-block {
-  min-width: 0;
-  flex: 1 1 auto;
-}
-
-.mover-name {
-  color: #ffffff;
-  font-size: 14px;
-  font-weight: 950;
-  line-height: 1.2;
-}
-
-.mover-sub {
-  margin-top: 4px;
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 11px;
-  font-weight: 800;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.mover-delta {
-  flex: 0 0 auto;
-  color: #d7b46a;
-  font-size: 20px;
-  font-weight: 950;
-  letter-spacing: -0.04em;
-}
-
-.movers-empty {
-  grid-column: 1 / -1;
-  padding: 12px;
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 13px;
-  font-weight: 850;
-}
-
-@media (max-width: 980px) {
-  .progress-stats,
-  .movers-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .season-banner,
-  .progress-header,
-  .movers-header {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-}
+/* ===== V7 SCORE LOGIC / PROGRESS DASHBOARD / READABILITY CLEANUP ===== */
+.season-banner { margin: 0 0 16px; padding: 14px 18px; border-radius: 22px; border: 1px solid rgba(215,180,106,.44); background: linear-gradient(135deg, rgba(8,43,73,.98), rgba(11,71,117,.92)); box-shadow: 0 12px 26px rgba(15,23,42,.12); color: white; display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.season-kicker,.progress-kicker,.movers-kicker { color:#d7b46a; font-size:11px; font-weight:950; letter-spacing:.16em; text-transform:uppercase; }
+.season-title { margin-top:2px; color:#fff; font-size:27px; font-weight:950; letter-spacing:-.04em; line-height:1; text-transform:uppercase; }
+.season-banner-right,.progress-week-pill,.movers-note { flex:0 0 auto; border-radius:999px; border:1px solid rgba(215,180,106,.46); background:rgba(255,255,255,.08); color:#f7efe2; padding:8px 12px; font-size:12px; font-weight:950; letter-spacing:.08em; text-transform:uppercase; }
+.tile-points { display:none !important; }
+.tile-teams { top:12px !important; max-height:calc(100% - 70px) !important; }
+.progress-card,.movers-card { margin:16px 0; padding:16px; border-radius:22px; border:1px solid rgba(215,180,106,.42); background:radial-gradient(circle at top right, rgba(103,213,223,.15), transparent 42%), linear-gradient(135deg, rgba(8,43,73,.98), rgba(11,71,117,.92)); box-shadow:0 12px 26px rgba(15,23,42,.12); color:white; }
+.progress-header,.movers-header { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:14px; }
+.progress-header h2,.movers-header h2 { margin:2px 0 0; color:#fff; font-size:24px; font-weight:950; letter-spacing:-.03em; line-height:1; }
+.progress-track { position:relative; height:16px; overflow:hidden; border-radius:999px; border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.11); box-shadow:inset 0 0 0 1px rgba(255,255,255,.04); }
+.progress-fill { height:100%; border-radius:999px; background:linear-gradient(90deg,#67d5df,#d7b46a); box-shadow:0 0 18px rgba(215,180,106,.36); }
+.progress-stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:12px; }
+.progress-stat { min-height:86px; padding:12px; border-radius:16px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.06); }
+.progress-stat-label { color:#d7b46a; font-size:10px; font-weight:950; letter-spacing:.08em; text-transform:uppercase; }
+.progress-stat-value { margin-top:5px; color:#fff; font-size:26px; font-weight:950; letter-spacing:-.04em; line-height:1; }
+.progress-stat-value.small { font-size:20px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.progress-stat-sub { margin-top:5px; color:rgba(255,255,255,.72); font-size:12px; font-weight:800; }
+.ranking-name-wrap { display:flex; align-items:center; gap:7px; min-width:0; flex-wrap:wrap; }
+.status-badge { display:inline-flex; align-items:center; justify-content:center; padding:3px 8px; border-radius:999px; font-size:9px; font-weight:950; letter-spacing:.06em; line-height:1; text-transform:uppercase; white-space:nowrap; background:#fff !important; box-shadow:0 2px 5px rgba(15,23,42,.10); }
+.status-excellent { color:#8c6f2f !important; border:1px solid rgba(215,180,106,.82) !important; }
+.status-strong { color:#0b4775 !important; border:1px solid rgba(103,213,223,.78) !important; }
+.status-good { color:#047857 !important; border:1px solid rgba(34,197,94,.56) !important; }
+.status-support { color:#be123c !important; border:1px solid rgba(244,63,94,.56) !important; }
+.ranking-score-stack { flex:0 0 auto; display:flex; flex-direction:column; align-items:flex-end; gap:3px; }
+.ranking-sub-score { color:#64748b; font-size:10px; font-weight:850; }
+.movers-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+.mover-row { display:flex; align-items:center; gap:10px; min-width:0; padding:12px; border-radius:17px; background:rgba(255,255,255,.92) !important; border:1px solid rgba(215,180,106,.34) !important; box-shadow:0 8px 18px rgba(15,23,42,.12); }
+.mover-rank,.mover-delta { flex:0 0 auto; color:#d7b46a !important; font-weight:950; }
+.mover-rank { font-size:14px; }
+.mover-delta { font-size:20px; letter-spacing:-.04em; }
+.mover-name-block { min-width:0; flex:1 1 auto; }
+.mover-name { color:#082b49 !important; font-size:14px; font-weight:950; line-height:1.2; }
+.mover-sub { margin-top:4px; color:#64748b !important; font-size:11px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.movers-empty { grid-column:1 / -1; padding:12px; color:rgba(255,255,255,.72); font-size:13px; font-weight:850; }
+.spire-level-label { width:0 !important; min-width:0 !important; overflow:hidden !important; color:transparent !important; font-size:0 !important; }
+.spire-level { left:0 !important; right:0 !important; gap:0 !important; }
+.legend-level { display:none !important; }
+.spire-legend-row { justify-content:center !important; }
+@media (max-width:980px) { .progress-stats,.movers-grid { grid-template-columns:1fr; } .season-banner,.progress-header,.movers-header { align-items:flex-start; flex-direction:column; } }
