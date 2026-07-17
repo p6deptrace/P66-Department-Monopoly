@@ -413,7 +413,7 @@ function tileHtml(space, teams) {
   const visibleTeams = teams.slice(0, MAX_VISIBLE_TILE_TOKENS);
   const hiddenTeams = teams.slice(MAX_VISIBLE_TILE_TOKENS);
   const hiddenCount = hiddenTeams.length;
-  const hiddenList = hiddenTeams.map((team) => `<li>${escapeHtml(team.name)} <span>${team.status.label} • ${formatScore(team.currentAverage)}</span></li>`).join("");
+  const hiddenList = hiddenTeams.map((team) => `<li><span class="tile-hidden-name">${escapeHtml(team.name)}</span><span class="tile-hidden-status">${team.status.label} • ${formatScore(team.currentAverage)}</span></li>`).join("");
   const hiddenTitle = hiddenTeams.map((team) => `${team.name} - ${team.status.label} - Avg ${formatScore(team.currentAverage)}`).join(" | ");
   const overflowBadge = hiddenCount ? `<div class="tile-overflow-badge" title="${escapeHtml(hiddenTitle)}">+${hiddenCount}</div>` : "";
   const overflowPopover = hiddenCount ? `<div class="tile-overflow-popover"><div class="tile-overflow-title">Also on ${escapeHtml(space.name)}</div><ul>${hiddenList}</ul></div>` : "";
@@ -613,6 +613,30 @@ function renderBoard() {
   board.appendChild(spireCell);
 }
 
+function weeklyBreakdownHtml(department) {
+  const maxWeeks = Number(department.maxWeeks || contestContext.maxWeeks || 5);
+  const weekRows = department.weekScores.slice(0, maxWeeks).map((score, index) => {
+    const weekNumber = index + 1;
+    const numericScore = Number(score || 0);
+    const hasScore = numericScore > 0;
+    const status = hasScore ? getPerformanceStatus(numericScore) : { label: "Pending", className: "status-pending" };
+    return `<div class="ranking-week-row ${hasScore ? "" : "pending"}">
+      <div class="ranking-week-label">Week ${weekNumber}</div>
+      <div class="ranking-week-score">${hasScore ? formatScore(numericScore) : "-"}</div>
+      <span class="status-badge week-status ${status.className}">${status.label}</span>
+    </div>`;
+  }).join("");
+
+  return `<div class="ranking-hover-card">
+    <div class="ranking-hover-title">${escapeHtml(department.name)}</div>
+    <div class="ranking-hover-summary">
+      <span>Total: ${formatScore(department.totalScore)}</span>
+      <span>Average: ${formatScore(department.currentAverage)}</span>
+    </div>
+    <div class="ranking-week-list">${weekRows}</div>
+  </div>`;
+}
+
 function renderRankingDivision(group) {
   const rankedDepartments = [...departments]
     .filter((department) => getDepartmentGroup(department.id) === group)
@@ -630,9 +654,10 @@ function renderRankingDivision(group) {
           </div>
         </div>
         <div class="ranking-score-stack">
-          <span class="ranking-score">${formatScore(department.currentAverage)} avg</span>
-          <span class="ranking-sub-score">${formatScore(department.totalScore)} total</span>
+          <span class="ranking-score">${formatScore(department.totalScore)} total</span>
+          <span class="ranking-sub-score">${formatScore(department.currentAverage)} avg</span>
         </div>
+        ${weeklyBreakdownHtml(department)}
       </div>
     `;
   }).join("");
