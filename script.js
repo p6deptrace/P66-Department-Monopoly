@@ -432,7 +432,7 @@ function iconSvg(teamId) {
   if (baseId === "banquets") baseId = "banquets-foh";
 
   const icons = {
-    "windows": () => makeIcon(`<g transform="translate(14 14)"><path fill="#67d5df" stroke="#ffffff" stroke-width="2.5" d="M4 5l18-3v21H4z"/><path fill="#f7efe2" stroke="#ffffff" stroke-width="2.5" d="M26 2l20-3v24H26z"/><path fill="#0b4775" stroke="#ffffff" stroke-width="2.5" d="M4 28h18v21L4 46z"/><path fill="#67d5df" stroke="#ffffff" stroke-width="2.5" d="M26 28h20v24l-20-3z"/><path fill="none" stroke="#d7b46a" stroke-width="2.5" stroke-linecap="round" d="M24 3v47M5 25h40"/></g>`, badge),
+    "windows": () => makeIcon(`<g transform="translate(20 20)"><path fill="#67d5df" stroke="#ffffff" stroke-width="2" d="M0 2l11-2v15H0z"/><path fill="#f7efe2" stroke="#ffffff" stroke-width="2" d="M15-1l13-2v18H15z"/><path fill="#0b4775" stroke="#ffffff" stroke-width="2" d="M0 19h11v15L0 32z"/><path fill="#67d5df" stroke="#ffffff" stroke-width="2" d="M15 19h13v17l-13-2z"/><path fill="none" stroke="#d7b46a" stroke-width="2" stroke-linecap="round" d="M13 1v33M1 17h26"/></g>`, badge),
     "elate": () => makeIcon(`<path fill="#f7efe2" stroke="#d7b46a" stroke-width="3" d="M16 27h29v12c0 8-6 14-14 14S16 47 16 39V27z"/><path fill="none" stroke="#d7b46a" stroke-width="3" d="M45 31h5c5 0 5 9 0 9h-5"/><ellipse cx="30.5" cy="27" rx="16" ry="5" fill="#082b49" stroke="#d7b46a" stroke-width="3"/><path fill="none" stroke="#67d5df" stroke-width="3" stroke-linecap="round" d="M23 24c3-4 6-4 9 0 3-4 6-4 9 0"/>`, badge),
     "pier-top": () => makeIcon(`<path fill="#f7efe2" stroke="#d7b46a" stroke-width="3" d="M28 12h8l3 12v28H25V24l3-12z"/><path fill="#67d5df" d="M29 25h6v25h-6z" opacity=".85"/><path fill="#082b49" stroke="#d7b46a" stroke-width="3" d="M18 24h28c2 0 5 6 4 9H14c-1-3 2-9 4-9z"/><path fill="none" stroke="#d7b46a" stroke-width="3" stroke-linecap="round" d="M18 21h28M32 6v8M23 19l-4-5M41 19l4-5"/>`, badge),
     "pool": () => makeIcon(`<path fill="#67d5df" stroke="#d7b46a" stroke-width="3" d="M12 39c7-7 13-7 20 0s13 7 20 0v10c-7 7-13 7-20 0s-13-7-20 0V39z"/><path fill="#f7efe2" stroke="#d7b46a" stroke-width="3" d="M20 24c8-9 16-9 24 0-5-1-8 0-12 3-4-3-7-4-12-3z"/><path fill="none" stroke="#082b49" stroke-width="3" stroke-linecap="round" d="M32 26v17"/><circle cx="48" cy="28" r="6" fill="#d7b46a"/><path fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" d="M16 47c5-4 9-4 14 0M34 47c5 4 9 4 14 0"/>`, badge),
@@ -684,12 +684,14 @@ function getWithinReach(limit = 3) {
 
 function weeklyBreakdownHtml(department) {
   const maxWeeks = Number(department.maxWeeks || contestContext.maxWeeks || 5);
+  const activeWeeks = Math.max(Number(contestContext.weeksCompleted || 0), Number(contestContext.latestWeekNumber || 0), Number(department.weeksCompleted || 0));
   const weekRows = department.weekScores.slice(0, maxWeeks).map((score, index) => {
     const weekNumber = index + 1;
     const numericScore = Number(score || 0);
-    const hasScore = numericScore > 0;
-    const status = hasScore ? getPerformanceStatus(numericScore) : { label: "Pending", className: "status-pending" };
-    return `<div class="ranking-week-row ${hasScore ? "" : "pending"}"><div class="ranking-week-label">Week ${weekNumber}</div><div class="ranking-week-score">${hasScore ? formatScore(numericScore) : "-"}</div><span class="status-badge week-status ${status.className}">${status.label}</span></div>`;
+    const isActiveOrPastWeek = weekNumber <= activeWeeks;
+    const status = isActiveOrPastWeek ? getPerformanceStatus(numericScore) : { label: "Pending", className: "status-pending" };
+    const scoreLabel = isActiveOrPastWeek ? formatScore(numericScore) : "-";
+    return `<div class="ranking-week-row ${isActiveOrPastWeek ? "" : "pending"}"><div class="ranking-week-label">Week ${weekNumber}</div><div class="ranking-week-score">${scoreLabel}</div><span class="status-badge week-status ${status.className}">${status.label}</span></div>`;
   }).join("");
   return `<div class="ranking-hover-card"><div class="ranking-hover-title">${escapeHtml(department.name)}</div><div class="ranking-hover-summary"><span>Total: ${formatScore(department.totalScore || 0)}</span><span>Weekly Average: ${formatScore(department.currentAverage || department.score)}</span></div><div class="ranking-week-list">${weekRows}</div></div>`;
 }
