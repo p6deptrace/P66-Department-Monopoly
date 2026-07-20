@@ -743,3 +743,62 @@ async function init() {
 }
 
 document.addEventListener("DOMContentLoaded", init);
+
+
+/* ===== V14 STATUS COUNTS HOVER MENU - APPEND TO BOTTOM OF script.js ===== */
+function getDepartmentsByStatusLabel(statusLabel) {
+  return [...departments]
+    .filter((department) => {
+      const status = department.status || getPerformanceStatus(department.currentAverage || department.score);
+      return status.label === statusLabel;
+    })
+    .sort((a, b) => (b.currentAverage || b.score) - (a.currentAverage || a.score) || a.name.localeCompare(b.name));
+}
+
+function statusCountHoverCard(statusLabel, className, count) {
+  const matchingDepartments = getDepartmentsByStatusLabel(statusLabel);
+  const listItems = matchingDepartments.length
+    ? matchingDepartments
+        .map((department) => `<li><span>${escapeHtml(department.name)}</span><b>${formatScore(department.currentAverage || department.score)}</b></li>`)
+        .join("")
+    : `<li><span>No departments</span><b>-</b></li>`;
+
+  return `<div class="status-count-hover-wrap">
+    <span class="status-badge status-count-pill ${className}">${statusLabel} ${count}</span>
+    <div class="status-count-popover">
+      <div class="status-count-popover-title">${statusLabel} Departments</div>
+      <ul>${listItems}</ul>
+    </div>
+  </div>`;
+}
+
+renderStatusLegendPanel = function renderStatusLegendPanel() {
+  const panel = document.getElementById("statusLegendPanel");
+  if (!panel) return;
+
+  const counts = getStatusCounts();
+
+  panel.innerHTML = `<div class="status-legend-grid">
+    <div class="metric-box">
+      <div class="metric-box-kicker">Current Status Counts</div>
+      <h2>Status Counts</h2>
+      <div class="status-count-row large">
+        ${statusCountHoverCard("Excellent", "status-excellent", counts.Excellent || 0)}
+        ${statusCountHoverCard("Strong", "status-strong", counts.Strong || 0)}
+        ${statusCountHoverCard("Good", "status-good", counts.Good || 0)}
+        ${statusCountHoverCard("Needs Support", "status-support", counts["Needs Support"] || 0)}
+      </div>
+    </div>
+
+    <div class="metric-box">
+      <div class="metric-box-kicker">Scoring Guide</div>
+      <h2>Scoring Legend</h2>
+      <div class="legend-pill-row large">
+        <span>90+ Excellent</span>
+        <span>80-89 Strong</span>
+        <span>70-79 Good</span>
+        <span>&lt;70 Needs Support</span>
+      </div>
+    </div>
+  </div>`;
+};
