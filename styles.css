@@ -1895,3 +1895,167 @@ body::after {
     grid-template-columns: 1fr;
   }
 }
+
+V14 STATUS COUNTS HOVER PATCH
+
+This is designed to be a small, safe script + CSS update only.
+Do NOT touch the tower CSS for this.
+
+============================================================
+1) script.js - Add this helper function
+============================================================
+Place this function near getStatusCounts(), directly below it is fine:
+
+function getDepartmentsByStatusLabel(statusLabel) {
+  return [...departments]
+    .filter((department) => {
+      const status = department.status || getPerformanceStatus(department.currentAverage || department.score);
+      return status.label === statusLabel;
+    })
+    .sort((a, b) => (b.currentAverage || b.score) - (a.currentAverage || a.score) || a.name.localeCompare(b.name));
+}
+
+function statusCountHoverCard(statusLabel, className, count) {
+  const matchingDepartments = getDepartmentsByStatusLabel(statusLabel);
+  const listItems = matchingDepartments.length
+    ? matchingDepartments.map((department) => `<li><span>${escapeHtml(department.name)}</span><b>${formatScore(department.currentAverage || department.score)}</b></li>`).join("")
+    : `<li><span>No departments</span><b>-</b></li>`;
+
+  return `<div class="status-count-hover-wrap">
+    <span class="status-badge status-count-pill ${className}">${statusLabel} ${count}</span>
+    <div class="status-count-popover">
+      <div class="status-count-popover-title">${statusLabel} Departments</div>
+      <ul>${listItems}</ul>
+    </div>
+  </div>`;
+}
+
+============================================================
+2) script.js - Replace the status count row in renderStatusLegendPanel()
+============================================================
+Inside renderStatusLegendPanel(), find this part:
+
+<div class="status-count-row large"><span class="status-badge status-excellent">Excellent ${counts.Excellent || 0}</span><span class="status-badge status-strong">Strong ${counts.Strong || 0}</span><span class="status-badge status-good">Good ${counts.Good || 0}</span><span class="status-badge status-support">Needs Support ${counts["Needs Support"] || 0}</span></div>
+
+Replace it with this:
+
+<div class="status-count-row large">
+  ${statusCountHoverCard("Excellent", "status-excellent", counts.Excellent || 0)}
+  ${statusCountHoverCard("Strong", "status-strong", counts.Strong || 0)}
+  ${statusCountHoverCard("Good", "status-good", counts.Good || 0)}
+  ${statusCountHoverCard("Needs Support", "status-support", counts["Needs Support"] || 0)}
+</div>
+
+============================================================
+3) styles.css - Paste this at the VERY BOTTOM
+============================================================
+
+/* ===== V14 STATUS COUNTS HOVER MENU ===== */
+.status-count-row.large {
+  position: relative;
+  align-items: center;
+}
+
+.status-count-hover-wrap {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.status-count-pill {
+  cursor: default;
+}
+
+.status-count-popover {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 8px);
+  z-index: 120;
+  display: none;
+  width: 260px;
+  max-height: 260px;
+  padding: 11px 12px;
+  border-radius: 15px;
+  border: 1px solid rgba(215, 180, 106, 0.58);
+  background: rgba(255, 255, 255, 0.98);
+  color: #082b49;
+  box-shadow: 0 18px 32px rgba(15, 23, 42, 0.22);
+}
+
+.status-count-hover-wrap:hover .status-count-popover {
+  display: block;
+}
+
+.status-count-popover-title {
+  margin-bottom: 8px;
+  color: #8c6f2f;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+}
+
+.status-count-popover ul {
+  display: grid;
+  gap: 5px;
+  max-height: 205px;
+  margin: 0;
+  padding: 0 4px 0 0;
+  list-style: none;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(215, 180, 106, 0.75) rgba(15, 23, 42, 0.08);
+}
+
+.status-count-popover li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 6px 7px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #eef2f7;
+}
+
+.status-count-popover li span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #082b49;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.status-count-popover li b {
+  flex: 0 0 auto;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.status-count-popover ul::-webkit-scrollbar {
+  width: 6px;
+}
+
+.status-count-popover ul::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.08);
+  border-radius: 999px;
+}
+
+.status-count-popover ul::-webkit-scrollbar-thumb {
+  background: rgba(215, 180, 106, 0.75);
+  border-radius: 999px;
+}
+
+@media (max-width: 760px) {
+  .status-count-popover {
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(280px, calc(100vw - 44px));
+  }
+}
