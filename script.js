@@ -110,6 +110,68 @@ const departmentBank = [
   { id: "calusso-boh", name: "Calusso BOH", color: "bg-orange-900" },
 ];
 
+const dynamicDepartmentColors = [
+  "bg-amber-600", "bg-lime-600", "bg-sky-700", "bg-cyan-500", "bg-teal-500", "bg-orange-700",
+  "bg-indigo-600", "bg-purple-600", "bg-rose-500", "bg-emerald-700", "bg-blue-600", "bg-violet-700",
+  "bg-slate-700", "bg-yellow-700", "bg-pink-500", "bg-stone-600", "bg-green-600", "bg-fuchsia-600"
+];
+
+function formatDepartmentNameFromId(departmentId) {
+  return String(departmentId || "")
+    .replace(/-/g, " ")
+    .replace(/boh/gi, "BOH")
+    .replace(/ird/gi, "IRD")
+    .replace(/foh/gi, "FOH")
+    .replace(/\w/g, (letter) => letter.toUpperCase())
+    .replace(/Boh/g, "BOH")
+    .replace(/Ird/g, "IRD")
+    .replace(/Foh/g, "FOH");
+}
+
+function getDynamicDepartmentColor(departmentId) {
+  const code = String(departmentId || "").split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return dynamicDepartmentColors[code % dynamicDepartmentColors.length];
+}
+
+function inferDepartmentGroup(departmentId, row) {
+  const id = String(departmentId || "").toLowerCase();
+  if (forecastingDepartmentIds.has(id)) return "forecasting";
+  if (nonForecastingDepartmentIds.has(id)) return "nonforecasting";
+  if (id.includes("boh")) return "nonforecasting";
+
+  const maxWeeklyScore = row && Array.isArray(row.weekScores)
+    ? Math.max(...row.weekScores.map((score) => Number(score || 0)))
+    : 0;
+  const currentAverage = row && Number(row.weeksCompleted || 0) > 0
+    ? Number(row.totalScore || 0) / Number(row.weeksCompleted || 1)
+    : 0;
+
+  if (maxWeeklyScore > 105 || currentAverage > 105) return "forecasting";
+  return "forecasting";
+}
+
+function getAllDepartmentDefinitionsFromCSV(scoreMap) {
+  const departmentMap = new Map(departmentBank.map((department) => [department.id, { ...department }]));
+
+  scoreMap.forEach((unusedScore, departmentId) => {
+    if (!departmentMap.has(departmentId)) {
+      departmentMap.set(departmentId, {
+        id: departmentId,
+        name: formatDepartmentNameFromId(departmentId),
+        color: getDynamicDepartmentColor(departmentId),
+        dynamic: true,
+      });
+    }
+
+    const row = extendedScoreRows.get(departmentId);
+    const inferredGroup = inferDepartmentGroup(departmentId, row);
+    if (inferredGroup === "forecasting") forecastingDepartmentIds.add(departmentId);
+    if (inferredGroup === "nonforecasting") nonForecastingDepartmentIds.add(departmentId);
+  });
+
+  return [...departmentMap.values()];
+}
+
 let departments = departmentBank.map((department) => ({ ...department, score: 0 }));
 let contestContext = { month: null, year: null, displayMonth: "Current Competition", weeksCompleted: 0, maxWeeks: 0, latestWeekNumber: 0 };
 let extendedScoreRows = new Map();
@@ -157,7 +219,8 @@ async function loadScoresFromCSV() {
     const response = await fetch(`${scoresPath}?v=${Date.now()}`, { cache: "no-store" });
     if (!response.ok) return console.warn(`scores.csv could not be loaded. Status: ${response.status}`);
     const scoreMap = parseScoresCSV(await response.text());
-    departments = departmentBank.map((department) => {
+    const activeDepartmentBank = getAllDepartmentDefinitionsFromCSV(scoreMap);
+    departments = activeDepartmentBank.map((department) => {
       const row = extendedScoreRows.get(department.id);
       const totalScore = row ? Number(row.totalScore || 0) : 0;
       const weeksCompleted = row ? Number(row.weeksCompleted || contestContext.weeksCompleted || 0) : 0;
