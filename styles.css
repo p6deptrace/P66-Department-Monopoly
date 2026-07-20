@@ -2346,3 +2346,24 @@ Replace it with this:
     grid-template-columns: 1fr;
   }
 }
+
+/* ===== V14 QUESTIONS PLUS CENTERING FIX ===== */
+.questions-summary-icon {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 30px !important;
+  min-height: 30px !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  font-size: 22px !important;
+  font-weight: 950 !important;
+  text-align: center !important;
+  transform-origin: center center !important;
+}
+
+.questions-details[open] .questions-summary-icon {
+  transform: rotate(45deg) !important;
+}
