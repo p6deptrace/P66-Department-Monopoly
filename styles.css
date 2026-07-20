@@ -2372,3 +2372,65 @@ left: -1px;
 .questions-details[open] .questions-summary-icon {
   transform: rotate(45deg) !important;
 }
+
+/* ===== V14 FINAL QUESTIONS ICON FIX - CSS DRAWN PLUS / X ===== */
+/* This override intentionally replaces all older text-based + / rotated + icon rules. */
+.questions-summary-icon {
+  flex: 0 0 auto !important;
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 30px !important;
+  min-height: 30px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(215, 180, 106, 0.58) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  line-height: 1 !important;
+  font-size: 0 !important;
+  color: transparent !important;
+  text-align: center !important;
+  transform: none !important;
+  top: auto !important;
+  left: auto !important;
+}
+
+.questions-summary-icon::before,
+.questions-summary-icon::after {
+  content: "" !important;
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  background: #d7b46a !important;
+  border-radius: 999px !important;
+  transform-origin: center center !important;
+  transition: transform 0.18s ease !important;
+}
+
+.questions-summary-icon::before {
+  width: 12px !important;
+  height: 2px !important;
+  transform: translate(-50%, -50%) rotate(0deg) !important;
+}
+
+.questions-summary-icon::after {
+  width: 2px !important;
+  height: 12px !important;
+  transform: translate(-50%, -50%) rotate(0deg) !important;
+}
+
+.questions-details[open] .questions-summary-icon {
+  transform: none !important;
+}
+
+.questions-details[open] .questions-summary-icon::before {
+  transform: translate(-50%, -50%) rotate(45deg) !important;
+}
+
+.questions-details[open] .questions-summary-icon::after {
+  transform: translate(-50%, -50%) rotate(-45deg) !important;
+}
