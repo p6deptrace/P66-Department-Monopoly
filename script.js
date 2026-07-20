@@ -47,6 +47,7 @@ const forecastingDepartmentIds = new Set([
   "reservations",
   "saltbreeze",
   "sotogrande",
+  "windows",
 ]);
 
 const nonForecastingDepartmentIds = new Set([
@@ -86,6 +87,7 @@ const departmentBank = [
   { id: "pier-top", name: "Pier Top", color: "bg-sky-700" },
   { id: "pool", name: "Pool", color: "bg-cyan-500" },
   { id: "spa", name: "Spa", color: "bg-teal-500" },
+  { id: "windows", name: "Windows", color: "bg-sky-500" },
   { id: "calusso", name: "Calusso", color: "bg-orange-700" },
   { id: "reservations", name: "Reservations", color: "bg-indigo-600" },
   { id: "ird", name: "IRD", color: "bg-purple-600" },
@@ -109,6 +111,67 @@ const departmentBank = [
   { id: "garni-boh", name: "Garni BOH", color: "bg-rose-700" },
   { id: "calusso-boh", name: "Calusso BOH", color: "bg-orange-900" },
 ];
+
+const dynamicDepartmentColors = [
+  "bg-amber-600", "bg-lime-600", "bg-sky-700", "bg-cyan-500", "bg-teal-500", "bg-orange-700",
+  "bg-indigo-600", "bg-purple-600", "bg-rose-500", "bg-emerald-700", "bg-blue-600", "bg-violet-700",
+  "bg-slate-700", "bg-yellow-700", "bg-pink-500", "bg-stone-600", "bg-green-600", "bg-fuchsia-600"
+];
+
+function formatDepartmentNameFromId(departmentId) {
+  return String(departmentId || "")
+    .replace(/-/g, " ")
+    .replace(/\bboh\b/gi, "BOH")
+    .replace(/\bird\b/gi, "IRD")
+    .replace(/\bfoh\b/gi, "FOH")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase())
+    .replace(/\bBoh\b/g, "BOH")
+    .replace(/\bIrd\b/g, "IRD")
+    .replace(/\bFoh\b/g, "FOH");
+}
+
+function getDynamicDepartmentColor(departmentId) {
+  const code = String(departmentId || "").split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return dynamicDepartmentColors[code % dynamicDepartmentColors.length];
+}
+
+function inferDepartmentGroup(departmentId, row) {
+  const id = String(departmentId || "").toLowerCase();
+  if (forecastingDepartmentIds.has(id)) return "forecasting";
+  if (nonForecastingDepartmentIds.has(id)) return "nonforecasting";
+  if (id.includes("boh")) return "nonforecasting";
+
+  const maxWeeklyScore = row && Array.isArray(row.weekScores)
+    ? Math.max(...row.weekScores.map((score) => Number(score || 0)))
+    : 0;
+  const activeWeeks = Math.max(Number(contestContext.weeksCompleted || 0), Number(contestContext.latestWeekNumber || 0));
+  const currentAverage = row && activeWeeks > 0 ? Number(row.totalScore || 0) / activeWeeks : 0;
+
+  if (maxWeeklyScore > 105 || currentAverage > 105) return "forecasting";
+  return "forecasting";
+}
+
+function getAllDepartmentDefinitionsFromCSV(scoreMap) {
+  const departmentMap = new Map(departmentBank.map((department) => [department.id, { ...department }]));
+
+  scoreMap.forEach((unusedScore, departmentId) => {
+    if (!departmentMap.has(departmentId)) {
+      departmentMap.set(departmentId, {
+        id: departmentId,
+        name: formatDepartmentNameFromId(departmentId),
+        color: getDynamicDepartmentColor(departmentId),
+        dynamic: true,
+      });
+    }
+
+    const row = extendedScoreRows.get(departmentId);
+    const inferredGroup = inferDepartmentGroup(departmentId, row);
+    if (inferredGroup === "forecasting") forecastingDepartmentIds.add(departmentId);
+    if (inferredGroup === "nonforecasting") nonForecastingDepartmentIds.add(departmentId);
+  });
+
+  return [...departmentMap.values()];
+}
 
 let departments = departmentBank.map((department) => ({ ...department, score: 0 }));
 let contestContext = { month: null, year: null, displayMonth: "Current Competition", weeksCompleted: 0, maxWeeks: 0, latestWeekNumber: 0 };
@@ -157,10 +220,12 @@ async function loadScoresFromCSV() {
     const response = await fetch(`${scoresPath}?v=${Date.now()}`, { cache: "no-store" });
     if (!response.ok) return console.warn(`scores.csv could not be loaded. Status: ${response.status}`);
     const scoreMap = parseScoresCSV(await response.text());
-    departments = departmentBank.map((department) => {
+    const activeDepartmentBank = getAllDepartmentDefinitionsFromCSV(scoreMap);
+    const globalWeeksCompleted = Math.max(Number(contestContext.weeksCompleted || 0), Number(contestContext.latestWeekNumber || 0));
+    departments = activeDepartmentBank.map((department) => {
       const row = extendedScoreRows.get(department.id);
+      const weeksCompleted = globalWeeksCompleted || (row ? Number(row.weeksCompleted || 0) : 0);
       const totalScore = row ? Number(row.totalScore || 0) : 0;
-      const weeksCompleted = row ? Number(row.weeksCompleted || contestContext.weeksCompleted || 0) : 0;
       const currentAverage = weeksCompleted > 0 ? totalScore / weeksCompleted : Number(scoreMap.get(department.id) || 0);
       return {
         ...department,
@@ -334,7 +399,7 @@ function getRankClass(teamId) {
   const group = getDepartmentGroup(teamId);
   const rankedDepartments = [...departments]
     .filter((department) => getDepartmentGroup(department.id) === group)
-    .sort((a, b) => (b.currentAverage || b.score) - (a.currentAverage || a.score) || b.totalScore - a.totalScore || a.name.localeCompare(b.name));
+    .sort(compareDepartmentRank);
 
   const rankIndex = rankedDepartments.findIndex((department) => department.id === teamId);
   if (rankIndex === 0) return "rank-gold";
@@ -367,7 +432,7 @@ function iconSvg(teamId) {
   if (baseId === "banquets") baseId = "banquets-foh";
 
   const icons = {
-    "windows": () => makeIcon(`<g transform="translate(15 15)"><path fill="#67d5df" stroke="#ffffff" stroke-width="2.5" d="M3 5l18-3v20H3z"/><path fill="#f7efe2" stroke="#ffffff" stroke-width="2.5" d="M25 1l22-4v24H25z" transform="translate(-1 4)"/><path fill="#0b4775" stroke="#ffffff" stroke-width="2.5" d="M3 27h18v20L3 44z"/><path fill="#67d5df" stroke="#ffffff" stroke-width="2.5" d="M24 27h22v23l-22-3z"/><path fill="none" stroke="#d7b46a" stroke-width="2.5" stroke-linecap="round" d="M23 3v45M4 25h42"/></g>`, badge),
+    "windows": () => makeIcon(`<g transform="translate(14 14)"><path fill="#67d5df" stroke="#ffffff" stroke-width="2.5" d="M4 5l18-3v21H4z"/><path fill="#f7efe2" stroke="#ffffff" stroke-width="2.5" d="M26 2l20-3v24H26z"/><path fill="#0b4775" stroke="#ffffff" stroke-width="2.5" d="M4 28h18v21L4 46z"/><path fill="#67d5df" stroke="#ffffff" stroke-width="2.5" d="M26 28h20v24l-20-3z"/><path fill="none" stroke="#d7b46a" stroke-width="2.5" stroke-linecap="round" d="M24 3v47M5 25h40"/></g>`, badge),
     "elate": () => makeIcon(`<path fill="#f7efe2" stroke="#d7b46a" stroke-width="3" d="M16 27h29v12c0 8-6 14-14 14S16 47 16 39V27z"/><path fill="none" stroke="#d7b46a" stroke-width="3" d="M45 31h5c5 0 5 9 0 9h-5"/><ellipse cx="30.5" cy="27" rx="16" ry="5" fill="#082b49" stroke="#d7b46a" stroke-width="3"/><path fill="none" stroke="#67d5df" stroke-width="3" stroke-linecap="round" d="M23 24c3-4 6-4 9 0 3-4 6-4 9 0"/>`, badge),
     "pier-top": () => makeIcon(`<path fill="#f7efe2" stroke="#d7b46a" stroke-width="3" d="M28 12h8l3 12v28H25V24l3-12z"/><path fill="#67d5df" d="M29 25h6v25h-6z" opacity=".85"/><path fill="#082b49" stroke="#d7b46a" stroke-width="3" d="M18 24h28c2 0 5 6 4 9H14c-1-3 2-9 4-9z"/><path fill="none" stroke="#d7b46a" stroke-width="3" stroke-linecap="round" d="M18 21h28M32 6v8M23 19l-4-5M41 19l4-5"/>`, badge),
     "pool": () => makeIcon(`<path fill="#67d5df" stroke="#d7b46a" stroke-width="3" d="M12 39c7-7 13-7 20 0s13 7 20 0v10c-7 7-13 7-20 0s-13-7-20 0V39z"/><path fill="#f7efe2" stroke="#d7b46a" stroke-width="3" d="M20 24c8-9 16-9 24 0-5-1-8 0-12 3-4-3-7-4-12-3z"/><path fill="none" stroke="#082b49" stroke-width="3" stroke-linecap="round" d="M32 26v17"/><circle cx="48" cy="28" r="6" fill="#d7b46a"/><path fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" d="M16 47c5-4 9-4 14 0M34 47c5 4 9 4 14 0"/>`, badge),
@@ -458,7 +523,7 @@ function spireHtml() {
 function getDepartmentsByGroup(group) {
   return departments
     .filter((department) => getDepartmentGroup(department.id) === group)
-    .sort((a, b) => (b.currentAverage || b.score) - (a.currentAverage || a.score) || b.totalScore - a.totalScore || a.name.localeCompare(b.name));
+    .sort(compareDepartmentRank);
 }
 
 function formatScore(value) {
@@ -468,29 +533,29 @@ function formatScore(value) {
 }
 
 function getWeeklyAverage(department) {
+  const activeWeeks = Math.max(Number(contestContext.weeksCompleted || 0), Number(contestContext.latestWeekNumber || 0), Number(department.weeksCompleted || 0));
+  const totalScore = Number(department.totalScore || 0);
+  if (activeWeeks > 0) return totalScore / activeWeeks;
+
   const explicitAverage = Number(department.currentAverage || 0);
   if (explicitAverage > 0) return explicitAverage;
-
-  const totalScore = Number(department.totalScore || 0);
-  const weeksCompleted = Number(department.weeksCompleted || 0);
-  if (totalScore > 0 && weeksCompleted > 0) return totalScore / weeksCompleted;
-
   return 0;
 }
 
 function averageScore(items) {
-  const validItems = items.filter((department) => getWeeklyAverage(department) > 0);
-  if (!validItems.length) return 0;
-  return validItems.reduce((sum, department) => sum + getWeeklyAverage(department), 0) / validItems.length;
+  if (!items.length) return 0;
+  return items.reduce((sum, department) => sum + getWeeklyAverage(department), 0) / items.length;
 }
 
 function totalAverageScore(items) {
-  const validItems = items.filter((department) => Number(department.totalScore || 0) > 0);
-  if (!validItems.length) return 0;
+  if (!items.length) return 0;
+  return items.reduce((sum, department) => sum + Number(department.totalScore || 0), 0) / items.length;
+}
 
-  return validItems.reduce((sum, department) => {
-    return sum + Number(department.totalScore || 0);
-  }, 0) / validItems.length;
+function compareDepartmentRank(a, b) {
+  return Number(b.totalScore || 0) - Number(a.totalScore || 0)
+    || Number(b.currentAverage || 0) - Number(a.currentAverage || 0)
+    || a.name.localeCompare(b.name);
 }
 
 function leadText(items) {
@@ -544,7 +609,7 @@ function insightAverageCard(group) {
 function insightClubCard() {
   const club = [...departments]
     .filter((department) => Number(department.score || 0) >= 100)
-    .sort((a, b) => (b.currentAverage || b.score) - (a.currentAverage || a.score) || b.totalScore - a.totalScore || a.name.localeCompare(b.name));
+    .sort(compareDepartmentRank);
 
   const visibleMembers = club.slice(0, 6).map((department) => `
     <span class="club-member">${markerHtml(department)} ${escapeHtml(department.name)}</span>
@@ -693,7 +758,7 @@ function renderBoard() {
 function renderRankingDivision(group) {
   const rankedDepartments = [...departments]
     .filter((department) => getDepartmentGroup(department.id) === group)
-    .sort((a, b) => (b.currentAverage || b.score) - (a.currentAverage || a.score) || b.totalScore - a.totalScore || a.name.localeCompare(b.name));
+    .sort(compareDepartmentRank);
   const rows = rankedDepartments.map((department, index) => {
     const rank = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`;
     return `<div class="ranking-row ${index < 3 ? "top" : ""}"><div class="ranking-left"><div class="rank-badge">${rank}</div>${markerHtml(department)}<div class="ranking-name-wrap"><span class="ranking-name">${escapeHtml(department.name)}</span>${statusBadgeHtml(department)}</div></div><div class="ranking-score-stack"><span class="ranking-score">${formatScore(department.totalScore || 0)} total</span><span class="ranking-sub-score">${formatScore(department.currentAverage || department.score)} weekly avg</span></div>${weeklyBreakdownHtml(department)}</div>`;
